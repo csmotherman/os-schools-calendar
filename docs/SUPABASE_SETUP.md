@@ -1,6 +1,6 @@
-# Supabase Setup Plan
+# Supabase Setup
 
-No Supabase project credentials are committed yet.
+The Supabase project is created and the initial database migrations/reference seed have been applied.
 
 ## Supabase responsibilities
 
@@ -8,29 +8,40 @@ No Supabase project credentials are committed yet.
 - Email/password Auth
 - Persistent sessions used by the Next.js application
 - Row Level Security
+- Database functions/triggers
 - Schema migrations
-- Seed/reference data
+- Reference data
 
 ## Repository locations
 
-- `src/lib/supabase/client/` — future browser client setup
-- `src/lib/supabase/server/` — future server client setup
-- `src/lib/supabase/middleware/` — future session/request helpers if required by the chosen Next.js/Supabase pattern
-- `supabase/migrations/` — versioned schema migrations
-- `supabase/seed/` — reference/initial data
-- `supabase/policies/` — policy design/support files if policies are not kept entirely inside migrations
+- `lib/supabase/client.ts` — browser client
+- `lib/supabase/server.ts` — cookie-aware server client
+- `lib/supabase/proxy.ts` — session refresh/cookie propagation
+- `proxy.ts` — Next.js 16 request proxy that calls the Supabase session helper
+- `supabase/migrations/` — versioned executable database migrations
+- `supabase/seed/` — reference/test data
+- `supabase/policies/` — policy documentation/support files; canonical executable RLS remains in migrations
 
 ## Environment variables
 
-`.env.example` contains variable names only. Real local values belong in `.env.local`, which is ignored by Git.
+Copy `.env.example` to `.env.local` and populate values from the Supabase project **Connect** dialog.
 
-Expected public variables:
+Required:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_SITE_URL`
 
-A privileged service-role key may be needed for tightly controlled server-only admin operations. If used, it must never be exposed to the browser or stored under a `NEXT_PUBLIC_` variable.
+The current application foundation intentionally does not use a service-role key. Add one only if a future server-only operation cannot be safely implemented using the authenticated user's session and RLS.
+
+## Authentication flow
+
+`@supabase/ssr` is used for browser/server clients. The root `proxy.ts` refreshes auth state and propagates cookies. Server-side authorization decisions should use a validated user (`getUser`/appropriate verified auth state), then rely on RLS for row access.
 
 ## RLS rule
 
-Every table exposed through Supabase's public API schema must have Row Level Security enabled before production use. Policies should explicitly target authenticated users and constrain program users to their authorized records while allowing admins only the access they require.
+Every exposed application table has RLS enabled. Program users require an approved profile plus approved program membership. Admin access is granted through the database `is_admin()` helper and related policies.
+
+## Migration discipline
+
+Applied migration files are historical records. Do not edit an already-applied migration and assume the live database changes with GitHub. Future database changes should be added as a new migration and then applied to Supabase.
