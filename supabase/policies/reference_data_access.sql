@@ -1,0 +1,7 @@
+-- Reference only. Do not execute this file separately.
+-- Canonical executable RLS policies live in:
+--   supabase/migrations/003_row_level_security.sql
+--
+-- Authenticated users may read active programs, school years, calendar types,
+-- activity types, requirements, and blocked dates needed to operate the app.
+-- Only approved admins may modify these reference/configuration records.
