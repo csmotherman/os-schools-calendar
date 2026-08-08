@@ -1,0 +1,8 @@
+-- Reference only. Do not execute this file separately.
+-- Canonical executable RLS policies live in:
+--   supabase/migrations/003_row_level_security.sql
+--
+-- An admin is a profile with role = ADMIN and account_status = APPROVED.
+-- Admins may manage reference/configuration data and access all program calendars.
+-- Audit logs are admin-readable only. Privileged application operations must still
+-- verify admin status server-side before using any service-role credential.
