@@ -166,13 +166,15 @@ create table public.requirements (
   )
 );
 
+-- Only one active requirement of each kind may exist for a school year/calendar type.
+-- Inactive historical requirements can remain without blocking a replacement rule.
 create unique index requirements_session_unique
   on public.requirements (school_year_id, calendar_type_id)
-  where metric_type = 'SESSION_DAYS';
+  where metric_type = 'SESSION_DAYS' and active = true;
 
 create unique index requirements_activity_unique
   on public.requirements (school_year_id, calendar_type_id, activity_type_id)
-  where metric_type = 'ACTIVITY_DAYS';
+  where metric_type = 'ACTIVITY_DAYS' and active = true;
 
 create table public.blocked_dates (
   id uuid primary key default gen_random_uuid(),
@@ -202,6 +204,13 @@ create table public.audit_log (
   constraint audit_log_action_not_blank check (btrim(action) <> ''),
   constraint audit_log_entity_type_not_blank check (btrim(entity_type) <> '')
 );
+
+-- Cross-table date integrity cannot be expressed as a plain CHECK constraint in PostgreSQL.
+-- Migration 002 installs triggers that enforce:
+--   * calendar start/end dates are inside the selected school year
+--   * each calendar day is inside its calendar's start/end range
+--   * blocked dates are inside the selected school year
+-- Keeping these checks in triggers avoids duplicating school-year dates on child rows.
 
 create index program_memberships_user_status_idx on public.program_memberships (user_id, status);
 create index program_memberships_program_status_idx on public.program_memberships (program_id, status);
