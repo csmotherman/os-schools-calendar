@@ -1,33 +1,45 @@
 # Project Structure
 
-The repository uses a planned `src/` structure so application code remains separate from Supabase infrastructure and project documentation.
+The repository uses root-level Next.js App Router folders rather than a `src/` wrapper.
 
 ## Top level
 
-- `src/app/` — Next.js App Router routes
-- `src/components/` — reusable UI components
-- `src/lib/` — application services and business logic
-- `src/types/` — shared TypeScript types
-- `supabase/` — database migrations, seed data, and RLS policy organization
+- `app/` — Next.js App Router routes and server actions
+- `components/` — reusable UI components as calendar/admin UI is implemented
+- `lib/` — application services and business logic
+- `types/` — shared TypeScript types/generated database types when added
+- `supabase/` — database migrations, seed data, tests, and policy documentation
 - `docs/` — architecture and operating documentation
 - `public/` — static public assets
+- `proxy.ts` — Next.js 16 request boundary used to refresh Supabase auth cookies
+- `.env.example` — safe environment-variable template
 
 ## Application route groups
 
-`src/app/(auth)` contains authentication pages.
+`app/(auth)` contains email/password account pages and auth-related server actions.
 
-`src/app/(program)` contains the normal program-user experience.
+`app/(program)` contains the normal program-user experience.
 
-`src/app/admin` contains Oakland Schools administrative pages.
+`app/admin` contains Oakland Schools administrative pages.
 
-`src/app/api` is reserved for server-side route handlers when privileged operations or controlled exports require them. Normal database reads/writes should not automatically become custom APIs if Supabase + RLS can safely handle them.
+`app/auth` contains auth callback route handlers that must have stable public URLs and therefore are not hidden inside a route group.
+
+`app/api` remains reserved for server-side route handlers when a controlled server endpoint is actually needed. Normal database reads/writes should not automatically become custom APIs when Supabase + RLS can safely handle them.
 
 ## Libraries
 
-`src/lib/supabase` will hold browser/server Supabase client setup and auth/session helpers.
+`lib/supabase/client.ts` creates the browser client.
 
-`src/lib/calendar` will own calendar generation, validation, counts, and rule evaluation. UI components should not contain business rules.
+`lib/supabase/server.ts` creates cookie-aware server clients.
 
-`src/lib/permissions` will contain application-level authorization helpers. Database RLS remains the final enforcement layer.
+`lib/supabase/proxy.ts` refreshes/propagates Supabase session cookies through the root Next.js `proxy.ts`.
 
-`src/lib/reporting` will contain reporting queries/export preparation.
+`lib/auth/` owns reusable application access-state helpers. These helpers improve routing/UX; database RLS remains the final authorization boundary.
+
+`lib/calendar/` is reserved for calendar generation, validation, counts, and rule evaluation. Calendar UI components should not own business rules.
+
+`lib/reporting/` is reserved for reporting queries and export preparation.
+
+## Current implementation principle
+
+Prefer server components/server actions for authenticated application flows where practical. Introduce client components only when browser interactivity is required, such as the calendar date side panel.
