@@ -1,34 +1,45 @@
-# Open Questions Before Schema v1.0
+# Remaining Decisions
 
-The directory architecture does not depend on these answers, so implementation can remain paused while they are resolved.
+Schema v1 and the initial authentication model are now established. These items remain intentionally open because they do not require redesigning the current schema.
 
-## 1. Regular-user assignment level
+## 1. Official program list
 
-Confirmed: multiple employees can be associated with the same program and admins have system-wide access.
+Needed before production account onboarding:
 
-Still to define precisely: if a program has multiple calendars (for example a 4-Day Full Day and 5-Day Full Day calendar), does every employee affiliated with that program edit all of its calendars, or is each employee assigned to one specific calendar?
+- canonical program names to import into `programs`;
+- confirmation that duplicate/display-name cleanup has been completed.
 
-This determines whether access is represented by a simple program affiliation or an explicit calendar membership/assignment table.
+No LEA/PSA/CBO or GSRP/Blend classification is required for the current version.
 
-## 2. Half Day counting
+## 2. Initial school-year configuration
 
-Working assumption: Half Day requires `In Session = Yes`; the date counts as one session day and one half-day count. Confirm before schema/business rules are frozen.
+Before real calendars are created, admins need the initial values for:
 
-## 3. Activity counting
+- active school year;
+- minimum/maximum Session Days by calendar type;
+- minimum/maximum Half Days if applicable;
+- Conference Day thresholds;
+- Professional Learning Day thresholds;
+- Home Visit Day thresholds;
+- any Break thresholds if Oakland Schools decides to validate them.
 
-Working assumption: activity checkboxes represent activity-days, not individual occurrences. If Conference is checked on October 14, reporting counts one conference day regardless of the number of conferences held that date.
+## 3. Initial blocked dates
 
-## 4. Account provisioning
+Determine the district-wide fixed dates for the first live school year and whether each is `NO_SESSION` or `NO_ACTIVITY`.
 
-Security default is admin-created/invited accounts rather than unrestricted self-registration. Confirm the preferred operational process before authentication UI is implemented.
+## 4. First admin bootstrap
 
-## 5. Official reference data
+The first administrator must be deliberately promoted/approved in Supabase before the admin UI can manage later account requests. The exact bootstrap procedure should be documented and tested once, then normal account administration should happen through the application.
 
-Needed before seed data is finalized:
+## 5. Admin approval transaction
 
-- Official program names
-- LEA/PSA/CBO/etc. classification for each program
-- Any official program codes/IDs that should be retained
-- Final activity labels
-- Initial school-year requirement values
-- Initial blocked dates
+Before implementing the approval UI, decide whether approving a user should always approve both the `profiles` account and selected `program_memberships` row in one database transaction. The recommended design is one transactional database function to avoid a partially approved state.
+
+## 6. Calendar editing UX details
+
+The schema supports the agreed date editor. Remaining UI decisions include:
+
+- exact calendar colors/icons;
+- whether users can bulk-edit date ranges after initial generation;
+- whether notes appear directly on calendar cells or only in the side panel;
+- how warnings vs blocking errors are displayed before submission.
