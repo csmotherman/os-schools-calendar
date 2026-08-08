@@ -1,91 +1,137 @@
-# Draft Database Schema
+# Database Schema v1
 
-**Status: design draft — do not create production migrations until open questions are closed.**
+**Status: implemented in Supabase.**
 
-The goal is a stable relational schema with configurable reference data instead of hard-coded columns for every future program/activity type.
+The live schema intentionally stays focused on calendar functionality. LEA/PSA/CBO classifications, GSRP/Blend classifications, instructional hours, and calendar version snapshots are not part of v1.
 
-## Planned reference/configuration tables
-
-### `program_categories`
-Examples: LEA, PSA, CBO, NP CBO.
-
-Planned fields: `id`, `name`, `active`, `display_order`, timestamps.
+## Core tables
 
 ### `programs`
-Official GSRP program/site list supplied by Oakland Schools.
+Official program/site names.
 
-Planned fields: `id`, `name`, `program_category_id`, optional external/code fields, `active`, timestamps.
+Fields: `id`, `name`, `active`, timestamps.
 
-### `school_years`
-Examples: 2026-27, 2027-28.
-
-Planned fields: `id`, `name`, `start_date`, `end_date`, `active`, timestamps.
-
-### `program_types`
-Initial types: 4-Day Part Day, 4-Day Full Day, 5-Day Part Day, 5-Day Full Day.
-
-Planned fields: `id`, `name`, `days_per_week`, `active`, `display_order`, timestamps.
-
-### `activity_types`
-Initial activities: Half Day, Conference, Professional Learning, Home Visit, Break.
-
-Planned fields: `id`, `name`, `code`, `allowed_when_in_session`, `allowed_when_not_in_session`, `active`, `display_order`, timestamps.
-
-## User/access tables
+Program names are controlled reference data and are not typed manually during normal account setup.
 
 ### `profiles`
-Application profile linked one-to-one to Supabase `auth.users`.
+One-to-one application profile for `auth.users`.
 
-Planned fields: auth user `id`, `first_name`, `last_name`, `role`, `active`, timestamps.
+Fields: auth user `id`, `first_name`, `last_name`, `role`, `account_status`, timestamps.
 
-### Program/calendar affiliation
-The final table design is intentionally not frozen yet. The application must support multiple employees having access to the same program while admins have system-wide access. See `OPEN_QUESTIONS.md` for whether regular users are affiliated at program level or calendar level.
+Roles: `PROGRAM_USER`, `ADMIN`.
 
-## Calendar tables
+Account statuses: `PENDING`, `APPROVED`, `DECLINED`, `DISABLED`.
+
+### `program_memberships`
+Connects users to programs.
+
+Multiple employees may belong to one program. A program user receives access to all calendars belonging to the approved program. Admins receive system-wide access through their role.
+
+Membership statuses: `PENDING`, `APPROVED`, `DECLINED`.
+
+### `school_years`
+Admin-managed school years such as `2026-27`, with overall system start/end boundaries.
+
+### `calendar_types`
+Reference data for schedule/calendar type.
+
+Initial values:
+
+- 4-Day Part Day
+- 4-Day Full Day
+- 5-Day Part Day
+- 5-Day Full Day
+
+Fields include `days_per_week` and `day_length` for reporting/validation without parsing display labels.
+
+### `activity_types`
+Reference data for date-level activity checkboxes.
+
+Initial values:
+
+- Half Day
+- Conference
+- Professional Learning
+- Home Visit
+- Break
+
+Activity types store whether they are allowed when children are in session and/or not in session.
 
 ### `calendars`
-One program may have multiple calendars when it operates different program types.
+One annual calendar for a program + school year + calendar type.
 
-Planned fields: `id`, `program_id`, `program_type_id`, `school_year_id`, `status`, first/last session dates, normal session weekday configuration, creator/update metadata.
+A database uniqueness constraint prevents duplicate calendar types for the same program/year.
+
+Fields include program, school year, calendar type, start/end dates, workflow status, creator/submission/approval metadata, review notes, and timestamps.
+
+Calendar statuses: `DRAFT`, `PENDING`, `APPROVED`, `CHANGES_REQUESTED`.
 
 ### `calendar_days`
-One row per date per calendar.
+One row per date in a calendar.
 
-Planned fields: `id`, `calendar_id`, `date`, `in_session`, optional `notes`, timestamps.
+Fields: calendar, date, `in_session`, notes, timestamps.
 
-The combination `(calendar_id, date)` must be unique.
+`(calendar_id, date)` is unique.
 
 ### `calendar_day_activities`
-Associates zero or more activity types with a calendar day.
+Associates zero or more configured activities with a calendar day.
 
-Planned fields: `id`, `calendar_day_id`, `activity_type_id`, timestamps.
-
-The combination `(calendar_day_id, activity_type_id)` must be unique. This allows future activity types without adding database columns.
-
-## Rule tables
+`(calendar_day_id, activity_type_id)` is unique, so checking Conference on one date always counts as one Conference Day rather than multiple conference occurrences.
 
 ### `requirements`
-Admin-configurable minimum/maximum counts by school year and program type.
+Admin-configurable thresholds by school year + calendar type.
 
-Planned concepts: session-day requirements and activity-day requirements, nullable min/max values, severity (`BLOCK` or `WARNING`), active flag.
+Supported metric types:
+
+- `SESSION_DAYS`
+- `ACTIVITY_DAYS`
+
+Rules may contain a minimum, maximum, or both and may be `BLOCK` or `WARNING` severity.
+
+Only one active rule of a given kind may exist for a school year/calendar type; inactive historical rules do not prevent creating a replacement.
 
 ### `blocked_dates`
-District-wide dates such as Thanksgiving or Christmas.
+Admin-managed district-wide fixed dates.
 
-Planned fields: `id`, `school_year_id`, `date`, `name`, restriction type (`NO_SESSION` or `NO_ACTIVITY`), active flag.
+Restriction types:
 
-## Workflow/history tables
+- `NO_SESSION`
+- `NO_ACTIVITY`
 
-### `calendar_versions`
-Immutable submission snapshots for approval/re-approval history.
-
-Planned fields: calendar, version number, submitter/timestamp, review status, reviewer/timestamp, review notes, snapshot.
+Blocked dates belong to one school year and may be deactivated rather than deleted.
 
 ### `audit_log`
-Records important administrative and calendar changes.
+Append-oriented change history for important calendar/configuration operations. It stores actor, entity, optional program/calendar context, before/after JSON, and timestamp.
 
-Planned fields: actor, action, entity type/id, before/after payload, timestamp.
+The application maintains only the **current calendar state**. Separate calendar-version snapshot tables are intentionally not used in v1; historical change information is retained through the audit log.
+
+## Calendar counting model
+
+The application tracks **days**, not hours/minutes.
+
+- Session Days = count of `calendar_days` where `in_session = true`
+- Half Days = count of dates tagged Half Day
+- Conference Days = count of dates tagged Conference
+- Professional Learning Days = count of dates tagged Professional Learning
+- Home Visit Days = count of dates tagged Home Visit
+- Break Days = count of dates tagged Break
+
+A Half Day requires `in_session = true` and counts as both one Session Day and one Half Day.
+
+## Integrity rules
+
+The database/functions enforce important structural rules including:
+
+- one calendar per program + school year + calendar type;
+- one row per date per calendar;
+- one instance of each activity type per date;
+- calendar dates inside the selected school year;
+- calendar-day dates inside the calendar range;
+- activity/session compatibility;
+- blocked-date restrictions;
+- editing an approved calendar returns it to `PENDING`;
+- program users require an approved account and approved program membership for calendar access.
 
 ## Reporting
 
-Do not store duplicate totals such as `total_session_days`. Counts should be derived from `calendar_days` and `calendar_day_activities`, then exposed through queries/views. This prevents totals from becoming inconsistent with the actual calendar.
+Do not store duplicate totals such as `total_session_days`. Reporting and dashboard totals should be derived from the source calendar rows so totals cannot drift from the calendar itself.
