@@ -1,37 +1,43 @@
-# Planned Route Map
+# Route Map
 
-## Authentication
+## Implemented authentication/account routes
 
+- `/` — redirects to login or dashboard based on session
 - `/login` — email/password sign in
+- `/register` — first name, last name, email, password
+- `/check-email` — email-confirmation instructions
+- `/auth/callback` — exchanges Supabase auth code for a cookie-backed session
+- `/select-program` — authenticated program dropdown and pending access request
+- `/pending` — account/program approval status
 - `/forgot-password` — request password reset
-- `/reset-password` — set a new password
+- `/reset-password` — set a new password from a recovery session
 
-There is intentionally no Google, Microsoft, or other social login in the initial design.
+There is intentionally no Google, Microsoft, or other social login.
 
-## Program user
+## Implemented dashboard foundations
 
-- `/dashboard` — affiliated program, calendar statuses, next action
-- `/calendars` — calendars available to the user's program/access assignment
-- `/calendars/[calendarId]` — calendar editing screen
-- `/summary` — counts and validation summary
-- `/profile` — first name, last name, email, basic account information
+- `/dashboard` — protected program-user landing page; redirects pending/unapproved users appropriately
+- `/admin/dashboard` — protected admin landing page with basic pending/calendar counts
 
-## Admin
+## Planned program-user routes
 
-- `/admin/dashboard` — system-wide status summary
-- `/admin/programs` — program directory
+- `/calendars` — calendars for the user's approved program
+- `/calendars/[calendarId]` — calendar grid/editing screen
+- `/summary` — calendar counts and validation summary
+- `/profile` — basic account information
+
+## Planned admin routes
+
+- `/admin/programs` — official program directory
 - `/admin/programs/[programId]` — program detail, users, calendars
+- `/admin/users` — account/program-access administration
+- `/admin/approvals` — pending user access and pending calendar review queues
 - `/admin/calendars` — all calendars with filters
 - `/admin/calendars/[calendarId]` — inspect/edit a calendar
-- `/admin/approvals` — pending calendar review queue
-- `/admin/reports` — cross-program reporting and exports
-- `/admin/users` — user administration
-- `/admin/settings/program-types` — 4/5-Day Part/Full Day reference data
+- `/admin/reports` — cross-program reporting and export
+- `/admin/settings/calendar-types` — 4/5-Day Part/Full Day reference data
 - `/admin/settings/activity-types` — Half Day, Conference, Professional Learning, Home Visit, Break
-- `/admin/settings/program-categories` — LEA/PSA/CBO/etc. reference data
-- `/admin/settings/requirements` — min/max thresholds by school year and program type
+- `/admin/settings/requirements` — min/max thresholds by school year and calendar type
 - `/admin/settings/blocked-dates` — district-wide no-session/no-activity dates
 - `/admin/settings/school-years` — school-year setup
 - `/admin/audit-log` — administrative history
-
-Routes are placeholders only in the architecture phase; no page implementation exists yet.
