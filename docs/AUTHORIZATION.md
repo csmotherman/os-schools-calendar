@@ -4,38 +4,53 @@ Authentication answers **who the user is**. Authorization answers **what that us
 
 ## Program user
 
-Planned capabilities:
+Access prerequisites:
 
-- View only authorized program/calendar data
-- Edit authorized calendar data
-- View summary/count validation
-- Submit a calendar for review
-- Edit an approved calendar, which returns it to pending review
-- Maintain basic own profile information where allowed
+- authenticated Supabase user;
+- `profiles.account_status = APPROVED`;
+- approved `program_memberships` row for the target program.
 
-Planned restrictions:
+Capabilities after approval:
 
-- No access to unrelated programs
-- No system-wide reports
-- No admin rule changes
-- No blocked-date changes
-- No approvals
-- No user/role administration
+- view the approved program;
+- view all calendars belonging to that program;
+- create allowed calendar types for that program/year;
+- edit authorized calendar data;
+- view counts/validation;
+- submit calendars for review;
+- edit an approved calendar, which returns it to `PENDING`;
+- view their own account/access state.
+
+Restrictions:
+
+- no access to unrelated program/calendar rows;
+- no system-wide reports;
+- no admin rule changes;
+- no blocked-date changes;
+- no calendar approvals;
+- no user/role administration.
+
+## Pending user
+
+An authenticated user with a pending profile or pending membership may use only the account-setup/status data allowed by RLS. Selecting a program does not grant calendar access.
 
 ## Admin
 
-Planned capabilities:
+An approved profile with role `ADMIN` receives system-wide access through the database `is_admin()` authorization helper/policies.
 
-- View and edit all programs/calendars
-- Review and approve pending submissions
-- View historical submissions
-- Configure program types and activity types
-- Configure school-year thresholds
-- Configure blocked dates
-- Manage users/program affiliations
-- Run reports and exports
-- View audit history
+Planned/allowed capabilities:
+
+- view/edit all programs and calendars;
+- review/approve user access and calendar submissions;
+- configure calendar types/activity types where allowed;
+- configure school-year thresholds;
+- configure blocked dates;
+- manage users/program affiliations;
+- run reports/exports;
+- view audit history.
 
 ## Enforcement
 
-UI hiding is not security. Supabase Row Level Security must enforce access directly at the database level on every exposed application table. Server-side privileged operations must separately verify admin authorization before using privileged credentials.
+UI hiding and route redirects are not security. Supabase RLS enforces row access directly in PostgreSQL.
+
+Application server code should still verify the signed-in user's account/role for navigation and sensitive workflows. Privileged service credentials should not be introduced merely to bypass RLS.
