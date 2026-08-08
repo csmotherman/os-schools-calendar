@@ -1,33 +1,42 @@
 # Admin Reporting
 
-Reporting should be derived from the normalized calendar data rather than manually stored totals.
+Reporting should be derived from normalized calendar data rather than manually stored totals.
 
 ## Core filters
 
 - School year
-- Program type
-- Program category (LEA/PSA/CBO/etc.)
+- Calendar type
 - Program
 - Calendar status
 - Compliance/validation status
 
+Program classification filters such as LEA/PSA/CBO or GSRP/Blend are intentionally out of scope until those attributes are actually needed and added to the data model.
+
 ## Core columns/measures
 
 - Program
-- Program category
-- Program type
-- Days in session
-- Half days
-- Conference days
-- Professional Learning days
-- Home Visit days
-- Break days
+- Calendar type
+- Session Days
+- Half Days
+- Conference Days
+- Professional Learning Days
+- Home Visit Days
+- Break Days
 - Requirement status
 - Submission/approval status
+- Last updated/submitted/approved timestamps where useful
 
 ## Admin dashboard
 
-The dashboard should surface high-value workflow information first: total calendars, draft/not started, pending review, approved, changes requested, and calendars failing blocking requirements.
+The dashboard should prioritize workflow information:
+
+- total calendars;
+- draft/not started;
+- pending review;
+- approved;
+- changes requested;
+- calendars failing blocking requirements;
+- pending user/program access requests.
 
 ## Exports
 
@@ -35,4 +44,4 @@ Plan for CSV and Excel-friendly exports from filtered report results. PDF output
 
 ## Architecture rule
 
-Do not create separate tables containing duplicated report totals unless a proven performance need appears. PostgreSQL views/queries should calculate these values from the source calendar records.
+Do not create separate tables containing duplicated report totals unless a proven performance need appears. PostgreSQL views/queries should calculate values from `calendar_days` and `calendar_day_activities` so reports cannot drift from the actual calendar.
