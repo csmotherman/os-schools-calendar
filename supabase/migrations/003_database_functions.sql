@@ -1,6 +1,8 @@
 -- Oakland Schools Calendar
 -- Migration 003: helper functions, integrity triggers, and audit capture
--- Apply after 001_initial_schema.sql and before 002_row_level_security.sql.
+-- NOTE: this file must run before the RLS migration. It is currently numbered
+-- 003 only because the repository skeleton pre-created the filenames. Apply
+-- migrations in the documented order until filenames are renumbered.
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -13,45 +15,16 @@ begin
 end;
 $$;
 
-create trigger programs_set_updated_at
-before update on public.programs
-for each row execute function public.set_updated_at();
-
-create trigger profiles_set_updated_at
-before update on public.profiles
-for each row execute function public.set_updated_at();
-
-create trigger program_memberships_set_updated_at
-before update on public.program_memberships
-for each row execute function public.set_updated_at();
-
-create trigger school_years_set_updated_at
-before update on public.school_years
-for each row execute function public.set_updated_at();
-
-create trigger calendar_types_set_updated_at
-before update on public.calendar_types
-for each row execute function public.set_updated_at();
-
-create trigger activity_types_set_updated_at
-before update on public.activity_types
-for each row execute function public.set_updated_at();
-
-create trigger calendars_set_updated_at
-before update on public.calendars
-for each row execute function public.set_updated_at();
-
-create trigger calendar_days_set_updated_at
-before update on public.calendar_days
-for each row execute function public.set_updated_at();
-
-create trigger requirements_set_updated_at
-before update on public.requirements
-for each row execute function public.set_updated_at();
-
-create trigger blocked_dates_set_updated_at
-before update on public.blocked_dates
-for each row execute function public.set_updated_at();
+create trigger programs_set_updated_at before update on public.programs for each row execute function public.set_updated_at();
+create trigger profiles_set_updated_at before update on public.profiles for each row execute function public.set_updated_at();
+create trigger program_memberships_set_updated_at before update on public.program_memberships for each row execute function public.set_updated_at();
+create trigger school_years_set_updated_at before update on public.school_years for each row execute function public.set_updated_at();
+create trigger calendar_types_set_updated_at before update on public.calendar_types for each row execute function public.set_updated_at();
+create trigger activity_types_set_updated_at before update on public.activity_types for each row execute function public.set_updated_at();
+create trigger calendars_set_updated_at before update on public.calendars for each row execute function public.set_updated_at();
+create trigger calendar_days_set_updated_at before update on public.calendar_days for each row execute function public.set_updated_at();
+create trigger requirements_set_updated_at before update on public.requirements for each row execute function public.set_updated_at();
+create trigger blocked_dates_set_updated_at before update on public.blocked_dates for each row execute function public.set_updated_at();
 
 create or replace function public.is_admin(check_user_id uuid default auth.uid())
 returns boolean
@@ -61,8 +34,7 @@ security definer
 set search_path = public
 as $$
   select exists (
-    select 1
-    from public.profiles p
+    select 1 from public.profiles p
     where p.id = check_user_id
       and p.role = 'ADMIN'
       and p.account_status = 'APPROVED'
@@ -105,15 +77,16 @@ declare
   year_start date;
   year_end date;
 begin
-  select sy.start_date, sy.end_date
-    into year_start, year_end
-  from public.school_years sy
-  where sy.id = new.school_year_id;
+  select sy.start_date, sy.end_date into year_start, year_end
+  from public.school_years sy where sy.id = new.school_year_id;
+
+  if year_start is null then
+    raise exception 'Selected school year does not exist';
+  end if;
 
   if new.start_date < year_start or new.end_date > year_end then
     raise exception 'Calendar dates must fall within the selected school year';
   end if;
-
   return new;
 end;
 $$;
@@ -131,15 +104,16 @@ declare
   calendar_start date;
   calendar_end date;
 begin
-  select c.start_date, c.end_date
-    into calendar_start, calendar_end
-  from public.calendars c
-  where c.id = new.calendar_id;
+  select c.start_date, c.end_date into calendar_start, calendar_end
+  from public.calendars c where c.id = new.calendar_id;
+
+  if calendar_start is null then
+    raise exception 'Selected calendar does not exist';
+  end if;
 
   if new.date < calendar_start or new.date > calendar_end then
     raise exception 'Calendar day must fall within the calendar start and end dates';
   end if;
-
   return new;
 end;
 $$;
@@ -158,24 +132,21 @@ declare
   allowed_in boolean;
   allowed_out boolean;
 begin
-  select cd.in_session
-    into session_value
-  from public.calendar_days cd
-  where cd.id = new.calendar_day_id;
+  select cd.in_session into session_value
+  from public.calendar_days cd where cd.id = new.calendar_day_id;
 
-  select at.allowed_when_in_session, at.allowed_when_not_in_session
-    into allowed_in, allowed_out
-  from public.activity_types at
-  where at.id = new.activity_type_id;
+  select at.allowed_when_in_session, at.allowed_when_not_in_session into allowed_in, allowed_out
+  from public.activity_types at where at.id = new.activity_type_id;
 
+  if session_value is null or allowed_in is null then
+    raise exception 'Calendar day or activity type does not exist';
+  end if;
   if session_value and not allowed_in then
     raise exception 'This activity is not allowed on an in-session day';
   end if;
-
   if not session_value and not allowed_out then
     raise exception 'This activity is not allowed on a non-session day';
   end if;
-
   return new;
 end;
 $$;
@@ -195,15 +166,11 @@ begin
     from public.calendar_day_activities cda
     join public.activity_types at on at.id = cda.activity_type_id
     where cda.calendar_day_id = new.id
-      and (
-        (new.in_session = true and at.allowed_when_in_session = false)
-        or
-        (new.in_session = false and at.allowed_when_not_in_session = false)
-      )
+      and ((new.in_session and not at.allowed_when_in_session)
+        or (not new.in_session and not at.allowed_when_not_in_session))
   ) then
     raise exception 'Change would make an existing activity invalid for this session state';
   end if;
-
   return new;
 end;
 $$;
@@ -220,18 +187,14 @@ as $$
 declare
   restriction public.blocked_date_restriction;
 begin
-  select bd.restriction_type
-    into restriction
-  from public.blocked_dates bd
-  join public.calendars c on c.school_year_id = bd.school_year_id
-  where c.id = new.calendar_id
-    and bd.date = new.date
-    and bd.active = true;
+  select bd.restriction_type into restriction
+  from public.calendars c
+  join public.blocked_dates bd on bd.school_year_id = c.school_year_id
+  where c.id = new.calendar_id and bd.date = new.date and bd.active = true;
 
-  if restriction in ('NO_SESSION', 'NO_ACTIVITY') and new.in_session = true then
+  if restriction in ('NO_SESSION', 'NO_ACTIVITY') and new.in_session then
     raise exception 'Children cannot be in session on this blocked date';
   end if;
-
   return new;
 end;
 $$;
@@ -248,30 +211,15 @@ as $$
 declare
   restriction public.blocked_date_restriction;
 begin
-  select bd.restriction_type
-    into restriction
-  from public.calendar_day_activities cda
-  join public.calendar_days cd on cd.id = cda.calendar_day_id
+  select bd.restriction_type into restriction
+  from public.calendar_days cd
   join public.calendars c on c.id = cd.calendar_id
   join public.blocked_dates bd on bd.school_year_id = c.school_year_id and bd.date = cd.date
-  where cda.id = new.id
-    and bd.active = true;
-
-  -- On INSERT, NEW does not yet exist in the table. Resolve from NEW directly.
-  if restriction is null then
-    select bd.restriction_type
-      into restriction
-    from public.calendar_days cd
-    join public.calendars c on c.id = cd.calendar_id
-    join public.blocked_dates bd on bd.school_year_id = c.school_year_id and bd.date = cd.date
-    where cd.id = new.calendar_day_id
-      and bd.active = true;
-  end if;
+  where cd.id = new.calendar_day_id and bd.active = true;
 
   if restriction = 'NO_ACTIVITY' then
     raise exception 'Activities cannot be scheduled on this blocked date';
   end if;
-
   return new;
 end;
 $$;
@@ -288,32 +236,30 @@ set search_path = public
 as $$
 declare
   target_calendar_id uuid;
+  target_day_id uuid;
 begin
   if tg_table_name = 'calendar_days' then
-    target_calendar_id := coalesce(new.calendar_id, old.calendar_id);
+    if tg_op = 'DELETE' then target_calendar_id := old.calendar_id;
+    else target_calendar_id := new.calendar_id;
+    end if;
   elsif tg_table_name = 'calendar_day_activities' then
-    select cd.calendar_id
-      into target_calendar_id
-    from public.calendar_days cd
-    where cd.id = coalesce(new.calendar_day_id, old.calendar_day_id);
+    if tg_op = 'DELETE' then target_day_id := old.calendar_day_id;
+    else target_day_id := new.calendar_day_id;
+    end if;
+    select cd.calendar_id into target_calendar_id from public.calendar_days cd where cd.id = target_day_id;
   end if;
 
   update public.calendars
-  set status = 'PENDING',
-      approved_by = null,
-      approved_at = null,
-      updated_at = now()
-  where id = target_calendar_id
-    and status = 'APPROVED';
+  set status = 'PENDING', approved_by = null, approved_at = null, updated_at = now()
+  where id = target_calendar_id and status = 'APPROVED';
 
-  return coalesce(new, old);
+  if tg_op = 'DELETE' then return old; else return new; end if;
 end;
 $$;
 
 create trigger calendar_days_reopen_approved_calendar
 after insert or update or delete on public.calendar_days
 for each row execute function public.mark_approved_calendar_pending();
-
 create trigger calendar_day_activities_reopen_approved_calendar
 after insert or update or delete on public.calendar_day_activities
 for each row execute function public.mark_approved_calendar_pending();
@@ -330,85 +276,46 @@ declare
   resolved_entity_id uuid;
   resolved_program_id uuid;
   resolved_calendar_id uuid;
+  source_program_id uuid;
+  source_calendar_id uuid;
+  source_day_id uuid;
 begin
   if tg_op = 'INSERT' then
-    row_after := to_jsonb(new);
-    resolved_entity_id := new.id;
+    row_after := to_jsonb(new); resolved_entity_id := new.id;
   elsif tg_op = 'UPDATE' then
-    row_before := to_jsonb(old);
-    row_after := to_jsonb(new);
-    resolved_entity_id := new.id;
+    row_before := to_jsonb(old); row_after := to_jsonb(new); resolved_entity_id := new.id;
   else
-    row_before := to_jsonb(old);
-    resolved_entity_id := old.id;
+    row_before := to_jsonb(old); resolved_entity_id := old.id;
   end if;
 
   if tg_table_name = 'calendars' then
+    if tg_op = 'DELETE' then source_program_id := old.program_id; else source_program_id := new.program_id; end if;
     resolved_calendar_id := resolved_entity_id;
-    resolved_program_id := coalesce(new.program_id, old.program_id);
+    resolved_program_id := source_program_id;
   elsif tg_table_name = 'calendar_days' then
-    select c.id, c.program_id into resolved_calendar_id, resolved_program_id
-    from public.calendars c
-    where c.id = coalesce(new.calendar_id, old.calendar_id);
+    if tg_op = 'DELETE' then source_calendar_id := old.calendar_id; else source_calendar_id := new.calendar_id; end if;
+    select c.id, c.program_id into resolved_calendar_id, resolved_program_id from public.calendars c where c.id = source_calendar_id;
   elsif tg_table_name = 'calendar_day_activities' then
+    if tg_op = 'DELETE' then source_day_id := old.calendar_day_id; else source_day_id := new.calendar_day_id; end if;
     select c.id, c.program_id into resolved_calendar_id, resolved_program_id
-    from public.calendar_days cd
-    join public.calendars c on c.id = cd.calendar_id
-    where cd.id = coalesce(new.calendar_day_id, old.calendar_day_id);
+    from public.calendar_days cd join public.calendars c on c.id = cd.calendar_id where cd.id = source_day_id;
   elsif tg_table_name = 'programs' then
     resolved_program_id := resolved_entity_id;
   elsif tg_table_name = 'program_memberships' then
-    resolved_program_id := coalesce(new.program_id, old.program_id);
+    if tg_op = 'DELETE' then resolved_program_id := old.program_id; else resolved_program_id := new.program_id; end if;
   end if;
 
-  insert into public.audit_log (
-    actor_user_id,
-    action,
-    entity_type,
-    entity_id,
-    program_id,
-    calendar_id,
-    before_data,
-    after_data
-  ) values (
-    auth.uid(),
-    tg_op,
-    tg_table_name,
-    resolved_entity_id,
-    resolved_program_id,
-    resolved_calendar_id,
-    row_before,
-    row_after
-  );
+  insert into public.audit_log (actor_user_id, action, entity_type, entity_id, program_id, calendar_id, before_data, after_data)
+  values (auth.uid(), tg_op, tg_table_name, resolved_entity_id, resolved_program_id, resolved_calendar_id, row_before, row_after);
 
-  return coalesce(new, old);
+  if tg_op = 'DELETE' then return old; else return new; end if;
 end;
 $$;
 
-create trigger audit_programs
-after insert or update or delete on public.programs
-for each row execute function public.write_audit_log();
-
-create trigger audit_program_memberships
-after insert or update or delete on public.program_memberships
-for each row execute function public.write_audit_log();
-
-create trigger audit_calendars
-after insert or update or delete on public.calendars
-for each row execute function public.write_audit_log();
-
-create trigger audit_calendar_days
-after insert or update or delete on public.calendar_days
-for each row execute function public.write_audit_log();
-
-create trigger audit_calendar_day_activities
-after insert or update or delete on public.calendar_day_activities
-for each row execute function public.write_audit_log();
-
-create trigger audit_requirements
-after insert or update or delete on public.requirements
-for each row execute function public.write_audit_log();
-
-create trigger audit_blocked_dates
-after insert or update or delete on public.blocked_dates
-for each row execute function public.write_audit_log();
+create trigger audit_programs after insert or update or delete on public.programs for each row execute function public.write_audit_log();
+create trigger audit_program_memberships after insert or update or delete on public.program_memberships for each row execute function public.write_audit_log();
+create trigger audit_calendars after insert or update or delete on public.calendars for each row execute function public.write_audit_log();
+create trigger audit_calendar_days after insert or update or delete on public.calendar_days for each row execute function public.write_audit_log();
+create trigger audit_calendar_day_activities after insert or update or delete on public.calendar_day_activities for each row execute function public.write_audit_log();
+create trigger audit_requirements after insert or update or delete on public.requirements for each row execute function public.write_audit_log();
+create trigger audit_blocked_dates after insert or update or delete on public.blocked_dates for each row execute function public.write_audit_log();
