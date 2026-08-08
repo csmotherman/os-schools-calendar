@@ -1,0 +1,7 @@
+-- Oakland Schools Calendar
+-- Migration 002: helper functions, integrity triggers, and audit capture
+--
+-- Canonical executable source is maintained in 003_database_functions.sql until
+-- the migration set is applied for the first time. This file intentionally
+-- exists to reserve the correct migration order and will replace the temporary
+-- 003 filename before deployment.
