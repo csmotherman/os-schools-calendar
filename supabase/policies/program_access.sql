@@ -1,0 +1,10 @@
+-- Reference only. Do not execute this file separately.
+-- Canonical executable RLS policies live in:
+--   supabase/migrations/003_row_level_security.sql
+--
+-- Program-user model:
+-- 1. User must have profiles.account_status = APPROVED.
+-- 2. User must have an APPROVED program_memberships row.
+-- 3. The program must be active.
+-- 4. Access then applies to every calendar belonging to that program.
+-- 5. Admins bypass program membership through public.has_program_access().
