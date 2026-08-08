@@ -2,28 +2,60 @@
 
 ## Identity model
 
-Initial authentication uses **email + password only** through Supabase Auth.
+Authentication uses **email + password only** through Supabase Auth.
 
 No Google, Microsoft, or other social identity provider is planned.
 
-Application profile information includes:
+Supabase Auth owns:
+
+- Email
+- Password credentials
+- Auth user ID
+- Session/refresh tokens
+- Email confirmation/recovery state
+
+The application `profiles` table owns:
 
 - First name
 - Last name
-- Email (identity managed by Supabase Auth)
-- Role
-- Program/calendar affiliation as finalized in schema v1.0
+- Role (`PROGRAM_USER` or `ADMIN`)
+- Account status (`PENDING`, `APPROVED`, `DECLINED`, `DISABLED`)
+
+## Registration flow
+
+Registration is intentionally two-step.
+
+1. User enters first name, last name, email, and password.
+2. `supabase.auth.signUp` sends first/last name as user metadata.
+3. The database Auth trigger creates a `profiles` row with `PROGRAM_USER` + `PENDING`.
+4. If email confirmation is enabled, the user confirms their email and returns through `/auth/callback`.
+5. Once authenticated, the user visits `/select-program`.
+6. The program dropdown reads active programs through the authenticated RLS policy.
+7. Selecting a program inserts a `PENDING` `program_memberships` row.
+8. The user remains on `/pending` until an admin approves both the account and program affiliation.
+
+The program is not collected before authentication. This avoids granting anonymous Data API access to the official program table simply to populate the registration dropdown.
 
 ## Persistent sessions
 
-Users should not be forced to sign in on every visit. The Next.js/Supabase implementation will use cookie-based server-side authentication so an existing valid session can be restored automatically.
+The application uses `@supabase/ssr` browser/server clients and a Next.js 16 `proxy.ts` session-refresh layer.
 
-A user should normally encounter the login page only when there is no valid session, they explicitly sign out, credentials/session security invalidates the session, they clear site data, or they use a new browser/device.
+Users should not be forced to sign in on every visit. A valid Supabase session is restored from cookies and refreshed when required.
 
-Supabase's current Next.js guidance uses cookie-based authentication with browser/server clients and public project URL/publishable-key environment variables.
+A user normally sees the login page only when no valid session exists, they explicitly sign out, their session is invalidated, they clear site data, or they use another browser/device.
 
-## Account creation
+## Authorization after login
 
-Security default: there should be no unrestricted public registration that lets an arbitrary person claim an Oakland Schools program. Initial production design should use admin-created/invited accounts or another controlled approval process.
+Successful authentication does not automatically grant calendar access.
 
-The official program association must come from stored program reference data rather than free-text user input.
+Calendar access requires:
+
+- `profiles.account_status = APPROVED`
+- an approved `program_memberships` row for the requested program
+- the database RLS policy to allow the requested row
+
+Pending, declined, or disabled accounts do not gain calendar access.
+
+## Password recovery
+
+The application contains a password-reset request page and a reset-password page. Supabase manages the recovery email/session and the application updates the password through the authenticated recovery session.
