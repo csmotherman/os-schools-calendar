@@ -8,11 +8,15 @@ function clean(value: FormDataEntryValue | null) {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function raw(value: FormDataEntryValue | null) {
+  return typeof value === 'string' ? value : ''
+}
+
 async function getOrigin() {
   const headerStore = await headers()
   return (
-    headerStore.get('origin') ??
     process.env.NEXT_PUBLIC_SITE_URL ??
+    headerStore.get('origin') ??
     'http://localhost:3000'
   )
 }
@@ -25,7 +29,7 @@ export async function register(formData: FormData) {
   const firstName = clean(formData.get('first_name'))
   const lastName = clean(formData.get('last_name'))
   const email = clean(formData.get('email')).toLowerCase()
-  const password = clean(formData.get('password'))
+  const password = raw(formData.get('password'))
 
   if (!firstName || !lastName || !email || !password) {
     redirect(withError('/register', 'All fields are required.'))
@@ -50,7 +54,7 @@ export async function register(formData: FormData) {
   })
 
   if (error) {
-    redirect(withError('/register', error.message))
+    redirect(withError('/register', 'Unable to create the account. Please check your information and try again.'))
   }
 
   if (data.session) {
@@ -62,7 +66,7 @@ export async function register(formData: FormData) {
 
 export async function login(formData: FormData) {
   const email = clean(formData.get('email')).toLowerCase()
-  const password = clean(formData.get('password'))
+  const password = raw(formData.get('password'))
 
   if (!email || !password) {
     redirect(withError('/login', 'Email and password are required.'))
@@ -116,7 +120,7 @@ export async function requestProgram(formData: FormData) {
   })
 
   if (error) {
-    redirect(withError('/select-program', error.message))
+    redirect(withError('/select-program', 'Unable to submit that program request.'))
   }
 
   redirect('/pending')
@@ -136,14 +140,14 @@ export async function requestPasswordReset(formData: FormData) {
   })
 
   if (error) {
-    redirect(withError('/forgot-password', error.message))
+    redirect(withError('/forgot-password', 'Unable to process the password reset request.'))
   }
 
   redirect('/forgot-password?sent=1')
 }
 
 export async function updatePassword(formData: FormData) {
-  const password = clean(formData.get('password'))
+  const password = raw(formData.get('password'))
 
   if (password.length < 10) {
     redirect(withError('/reset-password', 'Password must be at least 10 characters.'))
@@ -153,7 +157,7 @@ export async function updatePassword(formData: FormData) {
   const { error } = await supabase.auth.updateUser({ password })
 
   if (error) {
-    redirect(withError('/reset-password', error.message))
+    redirect(withError('/reset-password', 'Unable to update the password.'))
   }
 
   redirect('/dashboard')
