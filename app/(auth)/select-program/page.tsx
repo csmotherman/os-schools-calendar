@@ -20,11 +20,11 @@ export default async function SelectProgramPage({
   }
 
   const supabase = await createClient()
-  const { data: programs, error: programsError } = await supabase
-    .from('programs')
-    .select('id, name')
-    .eq('active', true)
-    .order('name')
+  const { data: programs, error: programsError } = await supabase.rpc('list_active_programs')
+
+  if (programsError) {
+    console.error('Unable to load active program directory:', programsError)
+  }
 
   return (
     <main className="page-shell centered-shell">
