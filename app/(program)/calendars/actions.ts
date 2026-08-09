@@ -54,14 +54,7 @@ export async function createCalendar(formData: FormData) {
   redirect(`/calendars/${calendarId}`)
 }
 
-export type CalendarDaySaveInput = {
-  dayId: string
-  calendarId: string
-  inSession: boolean
-  notes: string
-  activityIds: string[]
-}
-
+export type CalendarDaySaveInput = { dayId: string; calendarId: string; inSession: boolean; notes: string; activityIds: string[] }
 export type CalendarDaySaveResult = { ok: true } | { ok: false; error: string }
 
 export async function saveCalendarDayBackground(input: CalendarDaySaveInput): Promise<CalendarDaySaveResult> {
@@ -69,12 +62,32 @@ export async function saveCalendarDayBackground(input: CalendarDaySaveInput): Pr
   if (!input.dayId || !input.calendarId) return { ok: false, error: 'Missing calendar day information.' }
   const supabase = await createClient()
   const { error } = await supabase.rpc('save_calendar_day', {
-    target_day_id: input.dayId,
-    new_in_session: input.inSession,
-    new_notes: input.notes.trim(),
-    new_activity_type_ids: [...new Set(input.activityIds.filter(Boolean))],
+    target_day_id: input.dayId, new_in_session: input.inSession, new_notes: input.notes.trim(), new_activity_type_ids: [...new Set(input.activityIds.filter(Boolean))],
   })
   if (error) return { ok: false, error: error.message }
+  revalidatePath(`/calendars/${input.calendarId}`)
+  return { ok: true }
+}
+
+export type BulkCalendarDaySaveInput = {
+  calendarId: string
+  days: Array<{ dayId: string; inSession: boolean; notes: string; activityIds: string[] }>
+}
+
+export async function saveCalendarDaysBulk(input: BulkCalendarDaySaveInput): Promise<CalendarDaySaveResult> {
+  await requireApprovedProgramUser()
+  if (!input.calendarId || input.days.length === 0) return { ok: false, error: 'Select at least one calendar day.' }
+  if (input.days.length > 62) return { ok: false, error: 'Bulk edits are limited to 62 dates at a time.' }
+  const supabase = await createClient()
+  for (const day of input.days) {
+    const { error } = await supabase.rpc('save_calendar_day', {
+      target_day_id: day.dayId,
+      new_in_session: day.inSession,
+      new_notes: day.notes.trim(),
+      new_activity_type_ids: [...new Set(day.activityIds.filter(Boolean))],
+    })
+    if (error) return { ok: false, error: `Unable to save all selected dates: ${error.message}` }
+  }
   revalidatePath(`/calendars/${input.calendarId}`)
   return { ok: true }
 }
@@ -82,13 +95,7 @@ export async function saveCalendarDayBackground(input: CalendarDaySaveInput): Pr
 export async function saveCalendarDay(formData: FormData) {
   const dayId = text(formData, 'day_id')
   const calendarId = text(formData, 'calendar_id')
-  const result = await saveCalendarDayBackground({
-    dayId,
-    calendarId,
-    notes: text(formData, 'notes'),
-    inSession: formData.get('in_session') === 'true',
-    activityIds: formData.getAll('activity_type_ids').filter((value): value is string => typeof value === 'string' && value.length > 0),
-  })
+  const result = await saveCalendarDayBackground({ dayId, calendarId, notes: text(formData, 'notes'), inSession: formData.get('in_session') === 'true', activityIds: formData.getAll('activity_type_ids').filter((value): value is string => typeof value === 'string' && value.length > 0) })
   if (!result.ok) redirect(errorPath(`/calendars/${calendarId}`, result.error))
   redirect(`/calendars/${calendarId}?saved=1`)
 }
