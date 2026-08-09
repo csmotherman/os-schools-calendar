@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ProgramTopNav } from '@/components/program-top-nav'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -6,14 +7,13 @@ export const metadata: Metadata = {
   description: 'Oakland Schools GSRP calendar management application',
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ProgramTopNav />
+        {children}
+      </body>
     </html>
   )
 }
