@@ -57,13 +57,16 @@ export type Database = {
       admin_decline_access: { Args: { target_membership_id: string }; Returns: undefined }
       admin_disable_user: { Args: { target_user_id: string }; Returns: undefined }
       update_calendar_details: { Args: { target_calendar_id: string; new_start_date: string; new_end_date: string; new_calendar_type_id: string }; Returns: undefined }
+      update_calendar_range_with_days: { Args: { target_calendar_id: string; new_start_date: string; new_end_date: string; generated_days: Json }; Returns: undefined }
       submit_calendar: { Args: { target_calendar_id: string }; Returns: undefined }
       approve_calendar: { Args: { target_calendar_id: string; notes?: string | null }; Returns: undefined }
       request_calendar_changes: { Args: { target_calendar_id: string; notes: string }; Returns: undefined }
       calendar_is_program_editable: { Args: { target_calendar_id: string }; Returns: boolean }
       create_calendar_with_days: { Args: { target_program_id: string; target_school_year_id: string; target_calendar_type_id: string; target_start_date: string; target_end_date: string; generated_days: Json }; Returns: string }
       save_calendar_day: { Args: { target_day_id: string; new_in_session: boolean; new_notes: string; new_activity_type_ids?: string[] }; Returns: undefined }
+      save_calendar_days_bulk: { Args: { target_calendar_id: string; day_updates: Json }; Returns: number }
       calendar_has_blocking_requirement_failures: { Args: { target_calendar_id: string }; Returns: boolean }
+      calendar_has_structural_failures: { Args: { target_calendar_id: string }; Returns: boolean }
       update_own_profile_names: { Args: { new_first_name: string; new_last_name: string }; Returns: undefined }
       resubmit_program_request: { Args: { target_membership_id: string }; Returns: undefined }
     }
