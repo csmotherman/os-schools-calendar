@@ -24,19 +24,29 @@ export async function getAccessState() {
       .maybeSingle(),
     supabase
       .from('program_memberships')
-      .select('id, program_id, status, programs(id, name)')
+      .select('id, program_id, status, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false }),
   ])
 
   const membershipList = memberships ?? []
+  const programIds = [...new Set(membershipList.map((membership) => membership.program_id))]
+  const { data: programs } = programIds.length
+    ? await supabase.from('programs').select('id, name').in('id', programIds)
+    : { data: [] as { id: string; name: string }[] }
+
+  const programMap = new Map((programs ?? []).map((program) => [program.id, program]))
+  const enrichedMemberships = membershipList.map((membership) => ({
+    ...membership,
+    programs: programMap.get(membership.program_id) ?? null,
+  }))
   const approvedMembership =
-    membershipList.find((membership) => membership.status === 'APPROVED') ?? null
+    enrichedMemberships.find((membership) => membership.status === 'APPROVED') ?? null
 
   return {
     user,
     profile,
-    memberships: membershipList,
+    memberships: enrichedMemberships,
     approvedMembership,
   }
 }
