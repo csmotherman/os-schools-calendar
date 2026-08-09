@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { ProgramTopNav } from '@/components/program-top-nav'
+import { AdminTopNav } from '@/components/admin-top-nav'
 import './globals.css'
 import './navigation.css'
 import './modern-theme.css'
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body>
         <ProgramTopNav />
+        <AdminTopNav />
         {children}
       </body>
     </html>
