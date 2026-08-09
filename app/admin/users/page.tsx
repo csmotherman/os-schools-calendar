@@ -19,19 +19,17 @@ export default async function AdminUsersPage({
 
   const supabase = await createClient()
   const [profilesResult, membershipsResult, programsResult] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, first_name, last_name, role, account_status, created_at')
-      .order('last_name'),
-    supabase
-      .from('program_memberships')
-      .select('id, user_id, program_id, status, approved_at'),
+    supabase.from('profiles').select('id, first_name, last_name, role, account_status, created_at').order('last_name'),
+    supabase.from('program_memberships').select('id, user_id, program_id, status, approved_at'),
     supabase.from('programs').select('id, name'),
   ])
 
-  const membershipByUser = new Map(
-    (membershipsResult.data ?? []).map((membership) => [membership.user_id, membership]),
-  )
+  const loadErrors = [profilesResult.error, membershipsResult.error, programsResult.error].filter(Boolean)
+  if (loadErrors.length > 0) {
+    console.error('Unable to load admin users:', loadErrors)
+  }
+
+  const membershipByUser = new Map((membershipsResult.data ?? []).map((membership) => [membership.user_id, membership]))
   const programMap = new Map((programsResult.data ?? []).map((program) => [program.id, program.name]))
 
   return (
@@ -51,48 +49,41 @@ export default async function AdminUsersPage({
 
         {error ? <div className="alert alert-error">{error}</div> : null}
         {success ? <div className="alert alert-success">{success}</div> : null}
+        {loadErrors.length > 0 ? (
+          <div className="alert alert-error">Users could not be fully loaded. Check the server log for the database error.</div>
+        ) : null}
 
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Account</th>
-                <th>Program</th>
-                <th>Membership</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(profilesResult.data ?? []).map((item) => {
-                const membership = membershipByUser.get(item.id)
-                return (
-                  <tr key={item.id}>
-                    <td>
-                      <strong>{item.first_name} {item.last_name}</strong>
-                      <div className="muted small-text">Created {new Date(item.created_at).toLocaleDateString()}</div>
-                    </td>
-                    <td>{item.role}</td>
-                    <td><span className="status-pill">{item.account_status}</span></td>
-                    <td>{membership ? programMap.get(membership.program_id) ?? 'Unknown program' : '—'}</td>
-                    <td>{membership?.status ?? '—'}</td>
-                    <td>
-                      {item.role !== 'ADMIN' && item.account_status !== 'DISABLED' ? (
-                        <form action={disableUser}>
-                          <input type="hidden" name="user_id" value={item.id} />
-                          <button className="button button-danger button-small" type="submit">Disable</button>
-                        </form>
-                      ) : (
-                        <span className="muted">—</span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+        {loadErrors.length === 0 ? (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Name</th><th>Role</th><th>Account</th><th>Program</th><th>Membership</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                {(profilesResult.data ?? []).map((item) => {
+                  const membership = membershipByUser.get(item.id)
+                  return (
+                    <tr key={item.id}>
+                      <td><strong>{item.first_name} {item.last_name}</strong><div className="muted small-text">Created {new Date(item.created_at).toLocaleDateString()}</div></td>
+                      <td>{item.role}</td>
+                      <td><span className="status-pill">{item.account_status}</span></td>
+                      <td>{membership ? programMap.get(membership.program_id) ?? 'Unknown program' : '—'}</td>
+                      <td>{membership?.status ?? '—'}</td>
+                      <td>
+                        {item.role !== 'ADMIN' && item.account_status !== 'DISABLED' ? (
+                          <form action={disableUser}>
+                            <input type="hidden" name="user_id" value={item.id} />
+                            <button className="button button-danger button-small" type="submit">Disable</button>
+                          </form>
+                        ) : <span className="muted">—</span>}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </section>
     </main>
   )
