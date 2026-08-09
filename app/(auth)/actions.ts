@@ -67,8 +67,11 @@ export async function requestProgram(formData: FormData) {
   const { data: existing } = await supabase.from('program_memberships').select('id, status').eq('user_id', user.id).limit(1)
   if (existing && existing.length > 0) redirect('/pending')
 
-  const { error } = await supabase.from('program_memberships').insert({ user_id: user.id, program_id: programId, status: 'PENDING' })
-  if (error) redirect(withError('/select-program', 'Unable to submit that program request.'))
+  const { error } = await supabase.rpc('request_program_access', { target_program_id: programId })
+  if (error) {
+    console.error('Unable to submit program request:', error)
+    redirect(withError('/select-program', 'Unable to submit that program request.'))
+  }
   redirect('/pending')
 }
 
