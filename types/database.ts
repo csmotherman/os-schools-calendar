@@ -61,7 +61,7 @@ export type Database = {
       activity_types: Table<
         { id: string; code: string; name: string; allowed_when_in_session: boolean; allowed_when_not_in_session: boolean; active: boolean; display_order: number; created_at: string; updated_at: string },
         { id?: string; code: string; name: string; allowed_when_in_session?: boolean; allowed_when_not_in_session?: boolean; active?: boolean; display_order?: number; created_at?: string; updated_at?: string },
-        { code?: string; name?: string; days_per_week?: number; day_length?: DayLength; active?: boolean; display_order?: number; updated_at?: string }
+        { code?: string; name?: string; allowed_when_in_session?: boolean; allowed_when_not_in_session?: boolean; active?: boolean; display_order?: number; updated_at?: string }
       >
       calendars: Table<
         { id: string; program_id: string; school_year_id: string; calendar_type_id: string; start_date: string; end_date: string; status: CalendarStatus; created_by: string; submitted_by: string | null; submitted_at: string | null; approved_by: string | null; approved_at: string | null; review_notes: string | null; created_at: string; updated_at: string },
