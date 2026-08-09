@@ -99,6 +99,7 @@ export type Database = {
       is_admin: { Args: { check_user_id?: string }; Returns: boolean }
       has_program_access: { Args: { check_program_id: string; check_user_id?: string }; Returns: boolean }
       list_active_programs: { Args: Record<string, never>; Returns: { id: string; name: string }[] }
+      request_program_access: { Args: { target_program_id: string }; Returns: string }
       admin_approve_access: { Args: { target_membership_id: string }; Returns: undefined }
       admin_decline_access: { Args: { target_membership_id: string }; Returns: undefined }
       admin_disable_user: { Args: { target_user_id: string }; Returns: undefined }
