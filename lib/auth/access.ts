@@ -1,4 +1,26 @@
 import { createClient } from '@/lib/supabase/server'
+import type { AccountStatus, MembershipStatus, UserRole } from '@/types/database'
+
+type AccessProfile = {
+  id: string
+  first_name: string
+  last_name: string
+  role: UserRole
+  account_status: AccountStatus
+}
+
+type AccessMembership = {
+  id: string
+  program_id: string
+  status: MembershipStatus
+  created_at: string
+  programs: { id: string; name: string } | null
+}
+
+type AccessPayload = {
+  profile: AccessProfile | null
+  memberships: AccessMembership[]
+}
 
 export async function getAccessState() {
   const supabase = await createClient()
@@ -16,37 +38,25 @@ export async function getAccessState() {
     }
   }
 
-  const [{ data: profile }, { data: memberships }] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('id, first_name, last_name, role, account_status')
-      .eq('id', user.id)
-      .maybeSingle(),
-    supabase
-      .from('program_memberships')
-      .select('id, program_id, status, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false }),
-  ])
+  const { data, error } = await supabase.rpc('get_my_access_state')
+  if (error) {
+    console.error('Unable to load access state:', error)
+    return {
+      user,
+      profile: null,
+      memberships: [],
+      approvedMembership: null,
+    }
+  }
 
-  const membershipList = memberships ?? []
-  const programIds = [...new Set(membershipList.map((membership) => membership.program_id))]
-  const { data: programs } = programIds.length
-    ? await supabase.from('programs').select('id, name').in('id', programIds)
-    : { data: [] as { id: string; name: string }[] }
-
-  const programMap = new Map((programs ?? []).map((program) => [program.id, program]))
-  const enrichedMemberships = membershipList.map((membership) => ({
-    ...membership,
-    programs: programMap.get(membership.program_id) ?? null,
-  }))
-  const approvedMembership =
-    enrichedMemberships.find((membership) => membership.status === 'APPROVED') ?? null
+  const payload = (data ?? { profile: null, memberships: [] }) as AccessPayload
+  const memberships = payload.memberships ?? []
+  const approvedMembership = memberships.find((membership) => membership.status === 'APPROVED') ?? null
 
   return {
     user,
-    profile,
-    memberships: enrichedMemberships,
+    profile: payload.profile,
+    memberships,
     approvedMembership,
   }
 }
