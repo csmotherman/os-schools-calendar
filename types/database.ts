@@ -105,6 +105,12 @@ export type Database = {
       submit_calendar: { Args: { target_calendar_id: string }; Returns: undefined }
       approve_calendar: { Args: { target_calendar_id: string; notes?: string | null }; Returns: undefined }
       request_calendar_changes: { Args: { target_calendar_id: string; notes: string }; Returns: undefined }
+      calendar_is_program_editable: { Args: { target_calendar_id: string }; Returns: boolean }
+      create_calendar_with_days: { Args: { target_program_id: string; target_school_year_id: string; target_calendar_type_id: string; target_start_date: string; target_end_date: string; generated_days: Json }; Returns: string }
+      save_calendar_day: { Args: { target_day_id: string; new_in_session: boolean; new_notes: string; new_activity_type_ids?: string[] }; Returns: undefined }
+      calendar_has_blocking_requirement_failures: { Args: { target_calendar_id: string }; Returns: boolean }
+      update_own_profile_names: { Args: { new_first_name: string; new_last_name: string }; Returns: undefined }
+      resubmit_program_request: { Args: { target_membership_id: string }; Returns: undefined }
     }
     Enums: {
       user_role: UserRole
