@@ -22,7 +22,7 @@ export function CalendarDayGrid({ calendarId, days, activities, editable = true 
   const months = useMemo(() => { const grouped = new Map<string, Day[]>(); for (const day of localDays) { const key = day.date.slice(0, 7); grouped.set(key, [...(grouped.get(key) ?? []), day]) } return [...grouped.entries()] }, [localDays])
   const safeActiveMonthIndex = Math.min(activeMonthIndex, Math.max(0, months.length - 1))
   useEffect(() => { function key(e: KeyboardEvent) { if (e.key === 'Escape') { setSelectedId(null); setBulkPanel(false); if (bulkMode) { setBulkIds([]); setRangeAnchor(null) } } } window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key) }, [bulkMode])
-  const activeMonth = months[safeActiveMonthIndex], activeMonthDays = activeMonth?.[1] ?? [], activeMonthKey = activeMonth?.[0] ?? ''
+  const activeMonth = months[safeActiveMonthIndex], activeMonthDays = activeMonth?.[1] ?? []
   const activeSessionDays = activeMonthDays.filter((day) => day.in_session).length, activeActivityDays = activeMonthDays.filter((day) => day.activity_type_ids.length > 0).length
   const selectedBulkDays = localDays.filter((day) => bulkIds.includes(day.id)).sort((a, b) => a.date.localeCompare(b.date))
 
@@ -58,8 +58,10 @@ export function CalendarDayGrid({ calendarId, days, activities, editable = true 
     setLocalEdits((current) => { const next = { ...current }; for (const day of localDays) if (ids.has(day.id)) next[day.id] = { ...day, in_session: bulkInSession, activity_type_ids: allowedActivities, notes: bulkNotes }; return next })
     clearBulk()
   }
-  if (!activeMonth) return <div className="empty-state">No calendar dates are available.</div>
-  const firstWeekday = dateFromIso(`${activeMonthKey}-01`).getUTCDay(), populatedCells = firstWeekday + activeMonthDays.length, trailingCells = (7 - (populatedCells % 7)) % 7, monthTitle = monthLabel(activeMonthDays[0].date)
+  if (!activeMonth || activeMonthDays.length === 0) return <div className="empty-state">No calendar dates are available.</div>
+  // The first/last calendar month can be partial when the configured date range starts or ends mid-month.
+  // Align the grid to the first actual date in this calendar, not to the first day of the month.
+  const firstWeekday = dateFromIso(activeMonthDays[0].date).getUTCDay(), populatedCells = firstWeekday + activeMonthDays.length, trailingCells = (7 - (populatedCells % 7)) % 7, monthTitle = monthLabel(activeMonthDays[0].date)
   return <>
     <section className="calendar-browser" aria-labelledby="calendar-month-heading">
       <div className="calendar-toolbar"><div className="calendar-toolbar-left"><button className="month-arrow" type="button" aria-label="Previous month" disabled={safeActiveMonthIndex === 0} onClick={() => goToMonth(safeActiveMonthIndex - 1)}>‹</button><div className="month-select-wrap"><label className="sr-only" htmlFor="calendar-month-select">Month</label><select id="calendar-month-select" className="month-select" value={safeActiveMonthIndex} onChange={(e) => goToMonth(Number(e.target.value))}>{months.map(([month, monthDays], index) => <option key={month} value={index}>{monthLabel(monthDays[0].date)}</option>)}</select></div><button className="month-arrow" type="button" aria-label="Next month" disabled={safeActiveMonthIndex === months.length - 1} onClick={() => goToMonth(safeActiveMonthIndex + 1)}>›</button></div><div className="calendar-toolbar-summary"><span><strong>{activeSessionDays}</strong> session</span><span><strong>{activeActivityDays}</strong> activity</span></div><button type="button" className={`bulk-mode-button ${bulkMode ? 'bulk-mode-active' : ''}`} disabled={!editable} onClick={() => { setBulkMode((value) => !value); clearBulk() }}>{bulkMode ? 'Done selecting' : 'Select multiple'}</button></div>
