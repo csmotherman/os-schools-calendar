@@ -30,6 +30,7 @@ pnpm-debug.log*
 
 # Test / coverage output
 coverage/
+.test-dist/
 
 # Supabase local runtime
 supabase/.temp/
