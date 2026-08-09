@@ -27,7 +27,7 @@ export default async function AdminCalendarPage({
     .maybeSingle()
   if (!calendar) redirect('/admin/calendars')
 
-  const [daysResult, activitiesResult, dayActivitiesResult, requirementsResult, typeResult, yearResult, programResult] = await Promise.all([
+  const [daysResult, activitiesResult, dayActivitiesResult, requirementsResult, typeResult, yearResult, programResult, structuralResult] = await Promise.all([
     supabase.from('calendar_days').select('id, date, in_session, notes').eq('calendar_id', calendarId).order('date'),
     supabase.from('activity_types').select('id, code, name, allowed_when_in_session, allowed_when_not_in_session').eq('active', true).order('display_order'),
     supabase.from('calendar_day_activities').select('calendar_day_id, activity_type_id'),
@@ -35,6 +35,7 @@ export default async function AdminCalendarPage({
     supabase.from('calendar_types').select('name').eq('id', calendar.calendar_type_id).maybeSingle(),
     supabase.from('school_years').select('name').eq('id', calendar.school_year_id).maybeSingle(),
     supabase.from('programs').select('name').eq('id', calendar.program_id).maybeSingle(),
+    supabase.rpc('calendar_has_structural_failures', { target_calendar_id: calendarId }),
   ])
 
   const days = daysResult.data ?? []
@@ -44,12 +45,16 @@ export default async function AdminCalendarPage({
     if (!dayIds.has(item.calendar_day_id)) continue
     activitiesByDay.set(item.calendar_day_id, [...(activitiesByDay.get(item.calendar_day_id) ?? []), item.activity_type_id])
   }
+
   const enrichedDays = days.map((day) => ({ ...day, activity_type_ids: activitiesByDay.get(day.id) ?? [] }))
   const activities = activitiesResult.data ?? []
   const requirements = requirementsResult.data ?? []
   const summary = summarizeCalendarDays(enrichedDays)
   const results = evaluateRequirements(enrichedDays, requirements)
   const blocking = hasBlockingFailures(results)
+  const structural = structuralResult.data === true
+  const warningFailures = results.filter((item) => item.severity === 'WARNING' && !item.passes).length
+  const approvalBlocked = blocking || structural
   const activityMap = new Map(activities.map((activity) => [activity.id, activity.name]))
 
   return (
@@ -70,6 +75,8 @@ export default async function AdminCalendarPage({
 
           {error ? <div className="alert alert-error">{error}</div> : null}
           {calendar.review_notes ? <div className="notice"><strong>Review notes:</strong> {calendar.review_notes}</div> : null}
+          {structural ? <div className="alert alert-error"><strong>Structural issue:</strong> this calendar has missing dates or a district blocked-date conflict. It cannot be approved until corrected.</div> : null}
+          {warningFailures > 0 ? <div className="notice"><strong>{warningFailures} warning{warningFailures === 1 ? '' : 's'}:</strong> these do not block approval, but should be reviewed before approving.</div> : null}
 
           <div className="summary-grid">
             <div className="stat"><strong>Session days</strong><p className="metric">{summary.sessionDays}</p></div>
@@ -77,8 +84,8 @@ export default async function AdminCalendarPage({
           </div>
 
           <div className="section-heading section-spaced">
-            <div><h2>Requirements</h2><p className="muted">Database workflow blocks approval when a blocking requirement fails.</p></div>
-            <span className={`status-pill ${blocking ? 'status-changes_requested' : 'status-approved'}`}>{blocking ? 'Blocking issues' : 'Ready'}</span>
+            <div><h2>Requirements</h2><p className="muted">Blocking requirements and structural conflicts prevent approval. Warnings are reviewer-visible but do not block it.</p></div>
+            <span className={`status-pill ${approvalBlocked ? 'status-changes_requested' : 'status-approved'}`}>{approvalBlocked ? 'Blocking issues' : 'Ready'}</span>
           </div>
           <div className="requirements-list">
             {results.map((requirement) => {
@@ -92,11 +99,11 @@ export default async function AdminCalendarPage({
             <div className="review-actions">
               <form action={approveCalendar}>
                 <input type="hidden" name="calendar_id" value={calendar.id} />
-                <button className="button" type="submit" disabled={blocking}>Approve calendar</button>
+                <button className="button" type="submit" disabled={approvalBlocked}>Approve calendar</button>
               </form>
               <form action={requestCalendarChanges} className="stack compact-stack">
                 <input type="hidden" name="calendar_id" value={calendar.id} />
-                <div className="field"><label htmlFor="notes">Required changes</label><textarea id="notes" name="notes" rows={3} required /></div>
+                <div className="field"><label htmlFor="notes">Required changes</label><textarea id="notes" name="notes" rows={3} required placeholder="Explain exactly what the program needs to correct." /></div>
                 <button className="button button-danger fit-button" type="submit">Request changes</button>
               </form>
             </div>
@@ -104,7 +111,7 @@ export default async function AdminCalendarPage({
         </div>
 
         <div className="card card-fluid stack">
-          <div><h2>Calendar days</h2><p className="muted">Admins may inspect or correct any calendar day. Edits to an approved calendar automatically reopen review.</p></div>
+          <div><h2>Calendar days</h2><p className="muted">Inspect individual dates and activities. Any approved-calendar edit returns the calendar to review.</p></div>
           <CalendarDayGrid calendarId={calendar.id} days={enrichedDays} activities={activities} editable />
         </div>
       </section>
