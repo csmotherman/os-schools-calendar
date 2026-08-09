@@ -15,7 +15,14 @@ export default async function AdminProgramsPage({
   if (profile?.role !== 'ADMIN' || profile.account_status !== 'APPROVED') redirect('/dashboard')
 
   const supabase = await createClient()
-  const { data: programs } = await supabase.from('programs').select('id, name, active, created_at').order('name')
+  const { data: programs, error: programsError } = await supabase
+    .from('programs')
+    .select('id, name, active, created_at')
+    .order('name')
+
+  if (programsError) {
+    console.error('Unable to load admin programs:', programsError)
+  }
 
   return (
     <main className="page-shell">
@@ -27,33 +34,40 @@ export default async function AdminProgramsPage({
 
         {error ? <div className="alert alert-error">{error}</div> : null}
         {success ? <div className="alert alert-success">{success}</div> : null}
+        {programsError ? (
+          <div className="alert alert-error">
+            Programs could not be loaded. Check the server log for the database error.
+          </div>
+        ) : null}
 
         <form action={createProgram} className="inline-create-form">
           <div className="field grow-field"><label htmlFor="name">New program name</label><input id="name" name="name" required /></div>
           <button className="button" type="submit">Add program</button>
         </form>
 
-        <div className="table-wrap">
-          <table>
-            <thead><tr><th>Program</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
-            <tbody>
-              {(programs ?? []).map((program) => (
-                <tr key={program.id}>
-                  <td><Link href={`/admin/programs/${program.id}`}><strong>{program.name}</strong></Link></td>
-                  <td><span className={`status-pill ${program.active ? 'status-approved' : ''}`}>{program.active ? 'ACTIVE' : 'INACTIVE'}</span></td>
-                  <td>{new Date(program.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <form action={setProgramActive}>
-                      <input type="hidden" name="program_id" value={program.id} />
-                      <input type="hidden" name="active" value={program.active ? 'false' : 'true'} />
-                      <button className="button button-secondary button-small" type="submit">{program.active ? 'Deactivate' : 'Reactivate'}</button>
-                    </form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {!programsError ? (
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Program</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+              <tbody>
+                {(programs ?? []).map((program) => (
+                  <tr key={program.id}>
+                    <td><Link href={`/admin/programs/${program.id}`}><strong>{program.name}</strong></Link></td>
+                    <td><span className={`status-pill ${program.active ? 'status-approved' : ''}`}>{program.active ? 'ACTIVE' : 'INACTIVE'}</span></td>
+                    <td>{new Date(program.created_at).toLocaleDateString()}</td>
+                    <td>
+                      <form action={setProgramActive}>
+                        <input type="hidden" name="program_id" value={program.id} />
+                        <input type="hidden" name="active" value={program.active ? 'false' : 'true'} />
+                        <button className="button button-secondary button-small" type="submit">{program.active ? 'Deactivate' : 'Reactivate'}</button>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </section>
     </main>
   )
