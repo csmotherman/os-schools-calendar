@@ -61,7 +61,7 @@ export type Database = {
       activity_types: Table<
         { id: string; code: string; name: string; allowed_when_in_session: boolean; allowed_when_not_in_session: boolean; active: boolean; display_order: number; created_at: string; updated_at: string },
         { id?: string; code: string; name: string; allowed_when_in_session?: boolean; allowed_when_not_in_session?: boolean; active?: boolean; display_order?: number; created_at?: string; updated_at?: string },
-        { code?: string; name?: string; allowed_when_in_session?: boolean; allowed_when_not_in_session?: boolean; active?: boolean; display_order?: number; updated_at?: string }
+        { code?: string; name?: string; days_per_week?: number; day_length?: DayLength; active?: boolean; display_order?: number; updated_at?: string }
       >
       calendars: Table<
         { id: string; program_id: string; school_year_id: string; calendar_type_id: string; start_date: string; end_date: string; status: CalendarStatus; created_by: string; submitted_by: string | null; submitted_at: string | null; approved_by: string | null; approved_at: string | null; review_notes: string | null; created_at: string; updated_at: string },
@@ -98,6 +98,7 @@ export type Database = {
     Functions: {
       is_admin: { Args: { check_user_id?: string }; Returns: boolean }
       has_program_access: { Args: { check_program_id: string; check_user_id?: string }; Returns: boolean }
+      list_active_programs: { Args: Record<string, never>; Returns: { id: string; name: string }[] }
       admin_approve_access: { Args: { target_membership_id: string }; Returns: undefined }
       admin_decline_access: { Args: { target_membership_id: string }; Returns: undefined }
       admin_disable_user: { Args: { target_user_id: string }; Returns: undefined }
