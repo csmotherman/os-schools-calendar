@@ -19,6 +19,18 @@ export default async function AdminDashboardPage() {
     supabase.from('calendars').select('id', { count: 'exact', head: true }),
   ])
 
+  const loadErrors = [
+    pendingProfiles.error,
+    pendingMemberships.error,
+    pendingCalendars.error,
+    approvedCalendars.error,
+    totalCalendars.error,
+  ].filter(Boolean)
+
+  if (loadErrors.length > 0) {
+    console.error('Unable to load one or more admin dashboard metrics:', loadErrors)
+  }
+
   return (
     <main className="page-shell">
       <section className="card card-wide stack">
@@ -32,6 +44,12 @@ export default async function AdminDashboardPage() {
             <button className="button button-secondary" type="submit">Sign out</button>
           </form>
         </div>
+
+        {loadErrors.length > 0 ? (
+          <div className="alert alert-error">
+            Some dashboard data could not be loaded. Check the server log for the database error.
+          </div>
+        ) : null}
 
         <div className="summary-grid">
           <Link className="stat stat-link" href="/admin/approvals">
