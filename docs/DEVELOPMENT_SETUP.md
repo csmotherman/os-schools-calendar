@@ -1,93 +1,55 @@
-# Development / Implementation Sequence
+# Development / Implementation Status
 
-## Current state
+## Implemented
 
-### Completed foundation
-
-- Schema v1 created in Supabase
-- Database helper functions/triggers applied
-- Row Level Security applied
-- Auth profile trigger applied
-- Calendar/activity reference data seeded
-- Next.js + TypeScript project initialized
-- Supabase SSR browser/server clients added
-- Next.js 16 session `proxy.ts` added
-- Email/password registration and login added
-- Email confirmation callback added
-- Authenticated program-selection step added
-- Pending account/access state added
-- Protected program/admin dashboard foundations added
+- Supabase schema v1, helper functions/triggers, RLS, Auth profile trigger, and reference seed data
+- security/workflow hardening migrations through `011`
+- typed Next.js/Supabase application foundation
+- persistent email/password authentication and recovery
+- pending program-access registration and admin approval/decline
+- declined-request resubmission and profile self-service
+- program/admin dashboards
+- program directory administration
+- atomic calendar generation
+- month calendar UI with right-side date editor
+- activities, notes, and session-state editing
+- live counts and requirement evaluation
+- database-enforced blocking requirements at submit/approve
+- pending-calendar immutability for program users
+- admin review, approve, and changes-requested workflow
+- re-review after approved-calendar edits
+- school-year, blocked-date, requirement, calendar-type, and activity-type administration
+- cross-program reporting and CSV export
+- audit viewer
+- unit tests for generation/count/requirement logic
+- GitHub Actions verification workflow
 
 ## Local development setup
 
 1. Install Node.js 20.9+.
-2. Clone the repository and enter the project folder.
+2. Clone/pull the repository and enter the project folder.
 3. Run `npm install`.
 4. Copy `.env.example` to `.env.local`.
-5. Populate:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - `NEXT_PUBLIC_SITE_URL=http://localhost:3000`
-6. Run `npm run dev`.
-7. Run `npm run typecheck`, `npm run lint`, and `npm run build` before pushing significant application changes.
+5. Populate `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `NEXT_PUBLIC_SITE_URL=http://localhost:3000`.
+6. Run `npm run check`.
+7. Run `npm run dev`.
 
-## Next implementation slice — validate authentication
+## Existing Supabase project upgrade
 
-Before building calendars, prove the real account flow end to end:
+If `001`-`004` and `reference_data.sql` were already applied, run only `005` through `011` in numeric order. Do not edit the live schema manually to work around a migration error; fix the repository migration first.
 
-- Sign up through `/register`
-- Confirm email if enabled
-- Verify `profiles` row is created as `PENDING`
-- Select Test Program A through `/select-program`
-- Verify `program_memberships` row is `PENDING`
-- Bootstrap a test admin account
-- Approve the test user/account affiliation
-- Verify the program user can access only the approved program
-- Verify the admin can see system-wide data
-- Verify logout and persistent login behavior
+## Current validation priority
 
-## Following slice — admin account approval
+Before importing the official program list, complete the end-to-end test plan in `TEST_PLAN.md` with Test Program A/B and controlled test accounts. The critical acceptance gates are:
 
-After auth/RLS validation:
+- cross-program RLS isolation;
+- program user cannot manipulate approval state;
+- pending calendars cannot be edited by program users;
+- blocked dates/activity compatibility cannot be bypassed;
+- blocking requirements prevent submission/approval through direct RPC as well as UI;
+- approved edits reopen review;
+- reporting totals match source calendar rows.
 
-- Pending-account queue
-- Approve/decline account and membership together
-- Clear user-facing status messages
-- Audit approval decisions
-- Avoid partial approval states through a transactional database function if needed
+## Next product polish after validation
 
-## Calendar core
-
-Only after authorization passes:
-
-- Create one calendar per program + school year + calendar type
-- Ask for start/end dates and normal session weekdays
-- Auto-generate calendar dates
-- Calendar grid
-- Click day → right-side editor
-- In Session Yes/No
-- Activity checkboxes
-- Notes
-- Requirement validation
-- Blocked-date enforcement
-- Live counts
-
-## Workflow/admin
-
-- Calendar submission
-- Admin review/approval
-- Approved-calendar edit → Pending
-- Requirements administration
-- Blocked-date administration
-- Program/user administration
-- Audit history
-
-## Reporting
-
-- Cross-program admin summary
-- Filters by school year/calendar type/status
-- Session/activity counts
-- Compliance reporting
-- CSV/Excel-friendly export
-
-Each slice should be tested before adding the next one. The calendar UI should not be used to compensate for authorization or integrity problems in the database.
+Once the foundation passes those tests, remaining work is refinement rather than missing core architecture: official program/reference-data import, UX/accessibility review, richer admin filters, optional Excel-format export, deployment/domain configuration, operational documentation, and Oakland Schools IT/security review for production use.
