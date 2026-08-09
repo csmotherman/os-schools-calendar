@@ -9,9 +9,9 @@ export async function ProgramTopNav() {
   return (
     <header className="program-topbar">
       <div className="program-topbar-inner">
-        <Link className="program-brand" href="/dashboard" aria-label="Oakland Schools calendar dashboard">
-          <span className="program-brand-mark">OS</span>
-          <span><strong>Oakland Schools</strong><small>Program Calendar</small></span>
+        <Link className="program-brand" href="/dashboard" aria-label="Oakland Schools GSRP calendar dashboard">
+          <span className="program-brand-mark" aria-hidden="true">OS</span>
+          <span><strong>Oakland Schools</strong><small>GSRP Calendar</small></span>
         </Link>
         <nav className="program-nav" aria-label="Primary navigation">
           <Link href="/dashboard">Dashboard</Link>
