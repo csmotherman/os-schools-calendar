@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { BackButton } from '@/components/back-button'
+import { HelpModal } from '@/components/help-modal'
 import { getAccessState } from '@/lib/auth/access'
 
 export default async function AdminSettingsPage() {
@@ -7,21 +9,17 @@ export default async function AdminSettingsPage() {
   if (!user) redirect('/login')
   if (profile?.role !== 'ADMIN' || profile.account_status !== 'APPROVED') redirect('/dashboard')
 
-  return (
-    <main className="page-shell">
-      <section className="card card-wide stack">
-        <div className="header-row">
-          <div><p className="muted">Oakland Schools Administration</p><h1>Settings</h1><p className="muted">Manage calendar reference data and compliance rules.</p></div>
-          <Link className="button button-secondary" href="/admin/dashboard">Dashboard</Link>
-        </div>
-        <div className="admin-nav-grid">
-          <Link className="nav-card" href="/admin/settings/school-years"><strong>School years</strong><span>Create and activate school-year ranges.</span></Link>
-          <Link className="nav-card" href="/admin/settings/blocked-dates"><strong>Blocked dates</strong><span>Maintain district-wide no-session and no-activity dates.</span></Link>
-          <Link className="nav-card" href="/admin/settings/requirements"><strong>Requirements</strong><span>Configure minimum and maximum calendar counts.</span></Link>
-          <Link className="nav-card" href="/admin/settings/calendar-types"><strong>Calendar types</strong><span>Maintain 4-Day/5-Day Part/Full Day options.</span></Link>
-          <Link className="nav-card" href="/admin/settings/activity-types"><strong>Activity types</strong><span>Maintain Half Day, Conference, PL, Home Visit, and Break options.</span></Link>
-        </div>
-      </section>
-    </main>
-  )
+  const items = [
+    ['School years', 'Create school-year windows and control which years are available.', '/admin/settings/school-years', '01'],
+    ['Blocked dates', 'Add holidays and closure ranges. Weekends are skipped automatically.', '/admin/settings/blocked-dates', '02'],
+    ['Requirements', 'Set minimums, maximums, warnings, and blocking calendar rules.', '/admin/settings/requirements', '03'],
+    ['Calendar types', 'Manage the available schedule patterns programs can choose.', '/admin/settings/calendar-types', '04'],
+    ['Activity types', 'Control Half Day, Conference, PL, Home Visit, Break, and future activities.', '/admin/settings/activity-types', '05'],
+  ] as const
+
+  return <main className="page-shell"><section className="card card-wide stack settings-shell">
+    <div className="page-toolbar"><BackButton fallback="/admin/dashboard" /><HelpModal title="Admin settings" intro="Settings control the options and rules used by every program calendar. Most changes should be made before programs begin building calendars for a school year." steps={['Set up the school year first.', 'Add district-wide blocked dates and breaks.', 'Confirm calendar types and activity types.', 'Add requirements last, after the reference options are correct.']} /></div>
+    <div className="settings-hero"><div><p className="side-eyebrow">Oakland Schools Administration</p><h1>Settings</h1><p className="muted">Configure the shared rules and choices that drive every GSRP calendar.</p></div></div>
+    <div className="settings-menu">{items.map(([title, description, href, number]) => <Link className="settings-menu-card" href={href} key={href}><span className="settings-menu-number">{number}</span><div><strong>{title}</strong><span>{description}</span></div><span className="settings-menu-arrow" aria-hidden="true">→</span></Link>)}</div>
+  </section></main>
 }
