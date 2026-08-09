@@ -1,0 +1,41 @@
+/* Oakland Schools GSRP application theme
+   Brand palette follows Oakland Schools published standards:
+   Blue #2A328B, Green #00944B, Yellow #F6B413, Light blue #0077AC, Teal #008E82. */
+:root{
+  --background:#f5f7fb;
+  --surface:#ffffff;
+  --surface-soft:#f7f8fc;
+  --text:#17213b;
+  --muted:#667085;
+  --border:#dfe4ee;
+  --primary:#2a328b;
+  --primary-dark:#20276f;
+  --primary-soft:#eef0ff;
+  --os-green:#00944b;
+  --os-green-soft:#eaf8f1;
+  --os-yellow:#f6b413;
+  --os-sky:#0077ac;
+  --os-teal:#008e82;
+  --shadow:0 12px 36px rgb(24 34 66 / 7%);
+}
+html{background:var(--background)}
+body{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5;background:linear-gradient(180deg,#f8f9fd 0,#f4f6fa 360px,#f5f7fb 100%);letter-spacing:-.005em}
+h1,h2,h3,strong{letter-spacing:-.018em}h1{font-size:clamp(28px,3vw,38px);line-height:1.12;color:#17213b}h2{color:#202947}a{transition:color .16s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+.page-shell{padding:40px 24px 64px}.content-shell{width:min(100%,1240px)}
+.card{border-color:#e3e7ef;border-radius:20px;box-shadow:0 1px 2px rgb(16 24 40 / 3%),0 16px 40px rgb(42 50 139 / 5%)}.card-wide{width:min(100%,1180px)}
+.button{border-radius:9px;background:var(--primary);box-shadow:0 1px 2px rgb(16 24 40 / 10%);font-size:14px;letter-spacing:0}.button:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:0 5px 14px rgb(42 50 139 / 16%)}.button-secondary{background:#fff;color:#344054;border:1px solid #d7dce5;box-shadow:0 1px 2px rgb(16 24 40 / 4%)}.button-secondary:hover{background:#f8f9fc;color:var(--primary);border-color:#c9cdea}.button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgb(42 50 139 / 18%);outline-offset:2px}
+.field input,.field select,.field textarea,.filter-row select{border-color:#d7dce5;border-radius:9px;min-height:43px;box-shadow:0 1px 2px rgb(16 24 40 / 3%)}.field input:focus,.field select:focus,.field textarea:focus,.filter-row select:focus{outline:3px solid rgb(42 50 139 / 10%);border-color:#7d84c4;box-shadow:0 0 0 1px #7d84c4}
+.header-row{padding-bottom:6px}.header-row>.actions-row{align-self:flex-start}.muted{color:#697386}.metric{font-size:34px;color:#20276f;font-variant-numeric:tabular-nums}
+.summary-grid{gap:12px}.stat{position:relative;overflow:hidden;border-color:#e2e6ee;border-radius:14px;padding:19px 18px;box-shadow:0 1px 3px rgb(16 24 40 / 3%)}.stat:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--primary)}.stat:nth-child(2):before{background:var(--os-yellow)}.stat:nth-child(3):before{background:var(--os-green)}.stat:nth-child(4):before{background:var(--os-teal)}.stat-link:hover{border-color:#c9cdea;text-decoration:none;transform:translateY(-2px);box-shadow:0 8px 22px rgb(42 50 139 / 8%)}
+.admin-nav-grid{gap:12px}.nav-card{position:relative;border-color:#e2e6ee;border-radius:14px;padding:20px;background:linear-gradient(145deg,#fff,#fbfcff)}.nav-card strong{color:#252e65;font-size:15px}.nav-card span{font-size:13px;line-height:1.5}.nav-card:hover{text-decoration:none;border-color:#c7ccec;transform:translateY(-2px);box-shadow:0 10px 24px rgb(42 50 139 / 7%)}
+.status-pill{padding:6px 10px;border:1px solid transparent;letter-spacing:.02em}.status-approved{background:#eaf8f1;color:#087443;border-color:#ccebdd}.status-pending{background:#fff8e6;color:#8a5b00;border-color:#f5e2a7}.status-draft{background:#f2f4f7;color:#475467;border-color:#e4e7ec}.status-changes_requested{background:#fff1f0;color:#b42318;border-color:#fecdca}
+.table-wrap{border-color:#e2e6ee;border-radius:14px;box-shadow:0 1px 3px rgb(16 24 40 / 3%)}th{background:#f7f8fb;color:#4c5570;text-transform:uppercase;letter-spacing:.045em;font-size:11px}th,td{border-bottom-color:#e8ebf1}.calendar-list-item{border-color:#e2e6ee;border-radius:13px;padding:17px 18px;background:#fff}.calendar-list-item:hover{border-color:#c8cdeb;background:#fbfcff;text-decoration:none;transform:translateY(-1px);box-shadow:0 7px 18px rgb(42 50 139 / 6%)}
+.notice,.alert{border-radius:11px}.empty-state{border-color:#cbd1e0;background:linear-gradient(145deg,#fafbff,#f5f7fb);border-radius:14px}
+/* Calendar workspace */
+.calendar-page-shell{padding:24px 24px 40px}.calendar-workspace{width:min(100%,1520px)}.calendar-page-header{margin-bottom:16px}.calendar-title-copy h1{font-size:clamp(27px,2.2vw,34px);color:#192150}.calendar-program-name,.side-eyebrow,.drawer-eyebrow,.calendar-current-eyebrow{color:var(--primary);letter-spacing:.11em}.calendar-breadcrumb a{color:#59617a}.calendar-kpi-strip{border-color:#dfe3ec;border-radius:14px;box-shadow:0 3px 12px rgb(42 50 139 / 4%)}.calendar-kpi-strip>div{border-left-color:#e7eaf0;padding:11px 14px}.calendar-kpi-strip strong{color:#20276f}.kpi-success{color:var(--os-green)!important}.kpi-danger{color:var(--danger)!important}
+.calendar-layout{grid-template-columns:minmax(0,1fr) 292px;gap:16px}.calendar-browser{border-color:#dce1ea;border-radius:16px;box-shadow:0 12px 32px rgb(42 50 139 / 6%)}.calendar-toolbar{background:linear-gradient(180deg,#fbfcff,#f7f8fc);border-bottom-color:#e1e5ed;padding:10px 12px}.month-select,.month-arrow,.bulk-mode-button{border-color:#d5dae5;border-radius:8px}.month-select{color:#242c62}.month-arrow{color:var(--primary)}.bulk-mode-button{color:var(--primary);border-color:#c5caea}.bulk-mode-button:hover:not(:disabled),.bulk-mode-active{background:var(--primary-soft);border-color:#7f86c7;color:var(--primary)}.bulk-selection-bar{background:#f0f1ff;border-bottom-color:#d7daf5}.bulk-selection-bar strong{color:var(--primary)}
+.calendar-month-heading-row{padding:13px 16px}.calendar-month-heading-row h2{color:#20276f;font-size:21px}.weekday-header{background:#f7f8fb;color:#6b7285}.month-grid{background:#e5e8ef}.calendar-blank{background:#f7f8fb}.calendar-day{transition:background .13s ease,box-shadow .13s ease}.calendar-day:hover{background:#fafaff;box-shadow:inset 0 0 0 2px #aeb3df}.calendar-day-session{background:#f5f6ff}.calendar-day-selected,.calendar-day-bulk-selected{box-shadow:inset 0 0 0 2px var(--primary)}.calendar-day-bulk-selected{background:#eceeff!important}.session-dot{background:var(--os-green)}.bulk-check{background:var(--primary)}.day-marker{color:#263082}.activity-chip{background:#eaf8f1;color:#087443}.legend-session{background:#f0f1ff;border-color:#9da3d8}.legend-activity{background:#eaf8f1;border-color:#76c49e}.legend-selected{background:var(--primary);border-color:var(--primary)}.calendar-footer-nav{background:#fafbfc}.calendar-text-nav{color:var(--primary)}
+.inspector-card{border-color:#dfe3ec;border-radius:14px;box-shadow:0 3px 14px rgb(42 50 139 / 4%)}.inspector-card h2{color:#20276f}.requirement-pass{background:#eaf8f1;color:#087443}.calendar-range-form input{border-color:#d7dce5}.calendar-range-form input:focus{outline:3px solid rgb(42 50 139 / 12%);border-color:#7d84c4}
+.drawer-backdrop{background:rgb(18 24 55 / 42%);backdrop-filter:blur(3px)}.day-drawer{box-shadow:-18px 0 50px rgb(22 29 66 / 18%)}.drawer-header h2{color:#20276f}.autosave-saving{background:#eef0ff;color:#2a328b}.segmented .segment-active,.checkbox-selected{background:#eef0ff;color:#2a328b;border-color:#9fa5d8}.bulk-warning{background:#f1f2ff;border-color:#cbd0ef}.bulk-warning strong{color:#2a328b}
+@media(max-width:1100px){.calendar-layout{grid-template-columns:1fr}.calendar-inspector{position:static;max-height:none;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));overflow:visible}}
+@media(max-width:700px){.page-shell,.calendar-page-shell{padding:20px 12px 36px}.card{padding:20px;border-radius:16px}.header-row{align-items:flex-start;flex-direction:column}.calendar-title-row{align-items:flex-start;flex-direction:column}.calendar-kpi-strip{width:100%;overflow-x:auto}.calendar-kpi-strip>div{min-width:104px}.calendar-toolbar{grid-template-columns:1fr}.calendar-toolbar-summary{overflow-x:auto}.calendar-month-heading-row{align-items:flex-start;flex-direction:column;gap:7px}.weekday-full{display:none}.weekday-short{display:inline}.calendar-day{padding:6px;min-height:68px}.activity-chip{font-size:7px}}
