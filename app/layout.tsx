@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ProgramTopNav } from '@/components/program-top-nav'
 import './globals.css'
+import './navigation.css'
 
 export const metadata: Metadata = {
   title: 'Oakland Schools Calendar',
