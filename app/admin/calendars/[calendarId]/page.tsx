@@ -68,11 +68,13 @@ export default async function AdminCalendarPage({
               <p className="muted">{calendar.start_date} through {calendar.end_date}</p>
             </div>
             <div className="actions-row">
+              <span className="status-pill">View only</span>
               <span className={`status-pill status-${calendar.status.toLowerCase()}`}>{calendar.status.replaceAll('_', ' ')}</span>
-              <Link className="button button-secondary" href="/admin/calendars">All calendars</Link>
+              <Link className="button button-secondary" href="/admin/calendars">Back to calendars</Link>
             </div>
           </div>
 
+          <div className="notice"><strong>Admin review mode:</strong> this calendar is read-only. You can inspect every date, note, activity, and requirement without changing the program&apos;s submitted calendar.</div>
           {error ? <div className="alert alert-error">{error}</div> : null}
           {calendar.review_notes ? <div className="notice"><strong>Review notes:</strong> {calendar.review_notes}</div> : null}
           {structural ? <div className="alert alert-error"><strong>Structural issue:</strong> this calendar has missing dates or a district blocked-date conflict. It cannot be approved until corrected.</div> : null}
@@ -111,8 +113,8 @@ export default async function AdminCalendarPage({
         </div>
 
         <div className="card card-fluid stack">
-          <div><h2>Calendar days</h2><p className="muted">Inspect individual dates and activities. Any approved-calendar edit returns the calendar to review.</p></div>
-          <CalendarDayGrid calendarId={calendar.id} days={enrichedDays} activities={activities} editable />
+          <div><h2>Calendar preview</h2><p className="muted">Click a date to inspect its session status, activities, and notes. Nothing on this calendar can be edited from admin review mode.</p></div>
+          <CalendarDayGrid calendarId={calendar.id} days={enrichedDays} activities={activities} editable={false} />
         </div>
       </section>
     </main>
