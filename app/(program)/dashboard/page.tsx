@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getAccessState } from '@/lib/auth/access'
 import { createClient } from '@/lib/supabase/server'
-import { logout } from '@/app/(auth)/actions'
 
 export default async function DashboardPage() {
   const { user, profile, memberships, approvedMembership } = await getAccessState()
@@ -27,10 +26,6 @@ export default async function DashboardPage() {
             <p className="dashboard-eyebrow">Oakland Schools · GSRP Calendar</p>
             <h1>{approvedMembership.programs?.name ?? 'Program dashboard'}</h1>
             <p className="dashboard-subtitle">Welcome, {profile?.first_name}. Review calendar status, respond to requested changes, and keep your program submission on track.</p>
-          </div>
-          <div className="actions-row">
-            <Link className="button button-secondary" href="/profile">Profile</Link>
-            <form action={logout}><button className="button button-secondary" type="submit">Sign out</button></form>
           </div>
         </header>
 
