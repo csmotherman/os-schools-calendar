@@ -14,8 +14,10 @@ export async function AdminTopNav() {
         <Link href="/admin/approvals">Approvals</Link>
         <Link href="/admin/calendars">Calendars</Link>
         <Link href="/admin/programs">Programs</Link>
+        <Link href="/admin/users">Users</Link>
         <Link href="/admin/reports">Reports</Link>
         <Link href="/admin/settings">Settings</Link>
+        <Link href="/admin/audit-log">Audit log</Link>
       </nav>
       <div className="admin-nav-account"><span>{profile.first_name} {profile.last_name}</span><form action={logout}><button className="program-nav-signout" type="submit">Sign out</button></form></div>
     </div>
