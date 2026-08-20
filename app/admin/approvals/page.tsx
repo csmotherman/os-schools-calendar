@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { ConfirmSubmitButton } from '@/components/confirm-submit-button'
 import { getAccessState } from '@/lib/auth/access'
 import { createClient } from '@/lib/supabase/server'
 import { approveAccess, approveCalendar, declineAccess, requestCalendarChanges } from '../actions'
@@ -37,56 +38,56 @@ export default async function AdminApprovalsPage({
 
   return (
     <main className="page-shell">
-      <section className="card card-wide stack">
-        <div className="header-row">
-          <div><p className="muted">Oakland Schools Administration</p><h1>Approval queue</h1><p className="muted">Review user access requests and submitted calendars.</p></div>
+      <div className="dashboard-shell">
+        <header className="dashboard-header">
+          <div><p className="dashboard-eyebrow">Oakland Schools · GSRP Administration</p><h1>Approval queue</h1><p className="dashboard-subtitle">Review access requests and submitted calendars that require an administrative decision.</p></div>
           <Link className="button button-secondary" href="/admin/dashboard">Dashboard</Link>
-        </div>
+        </header>
 
-        {error ? <div className="alert alert-error">{error}</div> : null}
-        {success ? <div className="alert alert-success">{success}</div> : null}
-        {loadErrors.length > 0 ? <div className="alert alert-error">The approval queue could not be fully loaded. Check the server log for the database error.</div> : null}
+        {error ? <div className="alert alert-error" role="alert">{error}</div> : null}
+        {success ? <div className="alert alert-success" role="status">{success}</div> : null}
+        {loadErrors.length > 0 ? <div className="alert alert-error" role="alert">The approval queue could not be fully loaded. Check the server log for the database error.</div> : null}
 
         {loadErrors.length === 0 ? <>
-          <div className="section-heading">
-            <div><h2>User access requests</h2><p className="muted">Both the account and selected program are approved together.</p></div>
-            <span className="badge">{memberships.length}</span>
-          </div>
+          <section className="dashboard-section" aria-labelledby="access-requests-heading">
+            <div className="dashboard-section-header"><div><h2 id="access-requests-heading">User access requests</h2><p>Approving a request activates both the account and its selected program affiliation.</p></div><span className="badge">{memberships.length}</span></div>
+            {memberships.length === 0 ? <div className="empty-state"><strong>No access requests waiting</strong><p className="muted small-text">New program access requests will appear here.</p></div> : (
+              <div className="table-wrap"><table><thead><tr><th scope="col">User</th><th scope="col">Program</th><th scope="col">Account</th><th scope="col">Requested</th><th scope="col">Actions</th></tr></thead><tbody>
+                {memberships.map((membership) => {
+                  const requester = profileMap.get(membership.user_id)
+                  const requesterName = requester ? `${requester.first_name} ${requester.last_name}` : 'Unknown user'
+                  const programName = programMap.get(membership.program_id) ?? 'Unknown program'
+                  return <tr key={membership.id}>
+                    <td><strong>{requesterName}</strong></td>
+                    <td>{programName}</td>
+                    <td><span className="status-pill">{requester?.account_status ?? 'PENDING'}</span></td>
+                    <td>{new Date(membership.created_at).toLocaleDateString()}</td>
+                    <td><div className="actions-row">
+                      <form action={approveAccess}><input type="hidden" name="membership_id" value={membership.id} /><ConfirmSubmitButton className="button button-small" message={`Approve access for ${requesterName} to ${programName}?`}>Approve</ConfirmSubmitButton></form>
+                      <form action={declineAccess}><input type="hidden" name="membership_id" value={membership.id} /><ConfirmSubmitButton className="button button-danger button-small" message={`Decline the access request for ${requesterName}?`}>Decline</ConfirmSubmitButton></form>
+                    </div></td>
+                  </tr>
+                })}
+              </tbody></table></div>
+            )}
+          </section>
 
-          {memberships.length === 0 ? <div className="empty-state">No user access requests are waiting.</div> : (
-            <div className="table-wrap"><table><thead><tr><th>User</th><th>Program</th><th>Account</th><th>Requested</th><th>Actions</th></tr></thead><tbody>
-              {memberships.map((membership) => {
-                const requester = profileMap.get(membership.user_id)
-                return <tr key={membership.id}>
-                  <td>{requester ? `${requester.first_name} ${requester.last_name}` : 'Unknown user'}</td>
-                  <td>{programMap.get(membership.program_id) ?? 'Unknown program'}</td>
-                  <td><span className="status-pill">{requester?.account_status ?? 'PENDING'}</span></td>
-                  <td>{new Date(membership.created_at).toLocaleDateString()}</td>
-                  <td><div className="actions-row">
-                    <form action={approveAccess}><input type="hidden" name="membership_id" value={membership.id} /><button className="button button-small" type="submit">Approve</button></form>
-                    <form action={declineAccess}><input type="hidden" name="membership_id" value={membership.id} /><button className="button button-danger button-small" type="submit">Decline</button></form>
-                  </div></td>
-                </tr>
-              })}
-            </tbody></table></div>
-          )}
-
-          <div className="section-heading section-spaced">
-            <div><h2>Calendar submissions</h2><p className="muted">Approve a pending calendar or send it back with required changes.</p></div>
-            <span className="badge">{calendars.length}</span>
-          </div>
-
-          {calendars.length === 0 ? <div className="empty-state">No calendars are waiting for review.</div> : (
-            <div className="stack">{calendars.map((calendar) => (
-              <article className="review-card" key={calendar.id}>
-                <div className="header-row"><div><strong>{programMap.get(calendar.program_id) ?? 'Unknown program'}</strong><p className="muted">{typeMap.get(calendar.calendar_type_id) ?? 'Calendar'} · {yearMap.get(calendar.school_year_id) ?? 'School year'}</p></div><Link href={`/admin/calendars/${calendar.id}`}>Review calendar</Link></div>
-                <div className="actions-row"><form action={approveCalendar}><input type="hidden" name="calendar_id" value={calendar.id} /><button className="button button-small" type="submit">Approve calendar</button></form></div>
-                <form action={requestCalendarChanges} className="stack compact-stack"><input type="hidden" name="calendar_id" value={calendar.id} /><div className="field"><label htmlFor={`notes-${calendar.id}`}>Changes required</label><textarea id={`notes-${calendar.id}`} name="notes" rows={3} required /></div><button className="button button-danger button-small fit-button" type="submit">Request changes</button></form>
-              </article>
-            ))}</div>
-          )}
+          <section className="dashboard-section" aria-labelledby="calendar-submissions-heading">
+            <div className="dashboard-section-header"><div><h2 id="calendar-submissions-heading">Calendar submissions</h2><p>Open the calendar before approving it, or send it back with clear required changes.</p></div><span className="badge">{calendars.length}</span></div>
+            {calendars.length === 0 ? <div className="empty-state"><strong>No calendars waiting for review</strong><p className="muted small-text">Submitted program calendars will appear here.</p></div> : (
+              <div className="stack">{calendars.map((calendar) => {
+                const programName = programMap.get(calendar.program_id) ?? 'Unknown program'
+                const calendarName = typeMap.get(calendar.calendar_type_id) ?? 'Calendar'
+                return <article className="review-card" key={calendar.id}>
+                  <div className="header-row"><div><strong>{programName}</strong><p className="muted">{calendarName} · {yearMap.get(calendar.school_year_id) ?? 'School year'}</p></div><Link className="button button-secondary button-small" href={`/admin/calendars/${calendar.id}`}>Review calendar</Link></div>
+                  <div className="review-decision-row"><form action={approveCalendar}><input type="hidden" name="calendar_id" value={calendar.id} /><ConfirmSubmitButton className="button button-small" message={`Approve the ${calendarName} for ${programName}?`}>Approve calendar</ConfirmSubmitButton></form><span className="muted small-text">Approval records your administrative decision immediately.</span></div>
+                  <form action={requestCalendarChanges} className="stack compact-stack"><input type="hidden" name="calendar_id" value={calendar.id} /><div className="field"><label htmlFor={`notes-${calendar.id}`}>Changes required</label><textarea id={`notes-${calendar.id}`} name="notes" rows={3} required placeholder="Describe exactly what the program needs to correct before resubmitting." /></div><ConfirmSubmitButton className="button button-danger button-small fit-button" message={`Send this calendar back to ${programName} for changes?`}>Request changes</ConfirmSubmitButton></form>
+                </article>
+              })}</div>
+            )}
+          </section>
         </> : null}
-      </section>
+      </div>
     </main>
   )
 }

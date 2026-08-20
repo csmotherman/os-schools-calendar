@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getAccessState } from '@/lib/auth/access'
 import { createClient } from '@/lib/supabase/server'
-import { logout } from '@/app/(auth)/actions'
 
 export default async function DashboardPage() {
   const { user, profile, memberships, approvedMembership } = await getAccessState()
@@ -21,33 +20,52 @@ export default async function DashboardPage() {
 
   return (
     <main className="page-shell">
-      <section className="card card-wide stack">
-        <div className="header-row">
+      <div className="dashboard-shell">
+        <header className="dashboard-header">
           <div>
-            <p className="muted">Oakland Schools Program Calendar</p>
+            <p className="dashboard-eyebrow">Oakland Schools · GSRP Calendar</p>
             <h1>{approvedMembership.programs?.name ?? 'Program dashboard'}</h1>
-            <p className="muted">Welcome, {profile?.first_name}. Manage calendars and review their current status.</p>
+            <p className="dashboard-subtitle">Welcome, {profile?.first_name}. Review calendar status, respond to requested changes, and keep your program submission on track.</p>
           </div>
-          <div className="actions-row">
-            <Link className="button button-secondary" href="/profile">Profile</Link>
-            <form action={logout}><button className="button button-secondary" type="submit">Sign out</button></form>
+        </header>
+
+        <section className="dashboard-section" aria-labelledby="calendar-overview-heading">
+          <div className="dashboard-section-header">
+            <div>
+              <h2 id="calendar-overview-heading">Calendar overview</h2>
+              <p>Current status across your program calendars.</p>
+            </div>
+            <Link className="button button-small" href="/calendars/new">Create calendar</Link>
           </div>
-        </div>
+          <div className="metric-grid">
+            <Link className="metric-card" href="/calendars"><span className="metric-label">Total calendars</span><span className="metric-value">{total.count ?? 0}</span><span className="metric-detail">All school years and types</span></Link>
+            <Link className="metric-card" href="/calendars"><span className="metric-label">Awaiting review</span><span className="metric-value">{pending.count ?? 0}</span><span className="metric-detail">Submitted to Oakland Schools</span></Link>
+            <Link className="metric-card" href="/calendars"><span className="metric-label">Approved</span><span className="metric-value">{approved.count ?? 0}</span><span className="metric-detail">No current action required</span></Link>
+            <Link className="metric-card" href="/calendars"><span className="metric-label">Changes requested</span><span className="metric-value">{changesRequested.count ?? 0}</span><span className="metric-detail">Program action required</span></Link>
+          </div>
+        </section>
 
-        <div className="summary-grid">
-          <Link className="stat stat-link" href="/calendars"><strong>Total calendars</strong><p className="metric">{total.count ?? 0}</p></Link>
-          <Link className="stat stat-link" href="/calendars"><strong>Pending review</strong><p className="metric">{pending.count ?? 0}</p></Link>
-          <Link className="stat stat-link" href="/calendars"><strong>Approved</strong><p className="metric">{approved.count ?? 0}</p></Link>
-          <Link className="stat stat-link" href="/calendars"><strong>Changes requested</strong><p className="metric">{changesRequested.count ?? 0}</p></Link>
-        </div>
+        <div className="dashboard-grid-two">
+          <section className="dashboard-section" aria-labelledby="next-actions-heading">
+            <div className="dashboard-section-header"><div><h2 id="next-actions-heading">Next actions</h2><p>Start with the items that move your calendar forward.</p></div></div>
+            <div className="action-list">
+              {changesRequested.count ? <Link className="action-item" href="/calendars"><div><strong>Respond to requested changes</strong><span>{changesRequested.count} calendar{changesRequested.count === 1 ? '' : 's'} need updates before approval.</span></div><span className="action-arrow" aria-hidden="true">→</span></Link> : null}
+              {pending.count ? <Link className="action-item" href="/calendars"><div><strong>Track submitted calendars</strong><span>{pending.count} calendar{pending.count === 1 ? '' : 's'} are currently awaiting review.</span></div><span className="action-arrow" aria-hidden="true">→</span></Link> : null}
+              <Link className="action-item" href="/calendars"><div><strong>Review program calendars</strong><span>Open calendars, confirm day counts, and prepare drafts for submission.</span></div><span className="action-arrow" aria-hidden="true">→</span></Link>
+              <Link className="action-item" href="/summary"><div><strong>Review totals and requirements</strong><span>Compare session and activity-day totals across your calendars.</span></div><span className="action-arrow" aria-hidden="true">→</span></Link>
+            </div>
+          </section>
 
-        <div className="admin-nav-grid">
-          <Link className="nav-card" href="/calendars"><strong>Calendars</strong><span>Create, edit, and submit program calendars.</span></Link>
-          <Link className="nav-card" href="/calendars/new"><strong>Create calendar</strong><span>Generate a new calendar from dates and normal weekdays.</span></Link>
-          <Link className="nav-card" href="/summary"><strong>Summary</strong><span>Compare session and activity-day totals across calendars.</span></Link>
-          <Link className="nav-card" href="/profile"><strong>Profile</strong><span>Review account information and update your name.</span></Link>
+          <section className="dashboard-section" aria-labelledby="quick-links-heading">
+            <div className="dashboard-section-header"><div><h2 id="quick-links-heading">Quick links</h2><p>Common program tasks.</p></div></div>
+            <div className="quick-links">
+              <Link className="quick-link" href="/calendars/new"><strong>Create a calendar</strong><span>Generate dates from a school year and normal weekdays.</span></Link>
+              <Link className="quick-link" href="/summary"><strong>Program summary</strong><span>Review calendar totals in one place.</span></Link>
+              <Link className="quick-link" href="/profile"><strong>Account profile</strong><span>Review account and program information.</span></Link>
+            </div>
+          </section>
         </div>
-      </section>
+      </div>
     </main>
   )
 }

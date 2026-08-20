@@ -27,11 +27,7 @@ type SortButtonProps = {
 function SortButton({ column, label, sortKey, ascending, onSort }: SortButtonProps) {
   const active = sortKey === column
   return (
-    <button
-      type="button"
-      className={`table-sort ${active ? 'table-sort-active' : ''}`}
-      onClick={() => onSort(column)}
-    >
+    <button type="button" className={`table-sort ${active ? 'table-sort-active' : ''}`} onClick={() => onSort(column)} aria-label={`Sort by ${label}${active ? `, currently ${ascending ? 'ascending' : 'descending'}` : ''}`}>
       {label}
       <span aria-hidden="true">{active ? (ascending ? ' ↑' : ' ↓') : ' ↕'}</span>
     </button>
@@ -77,18 +73,19 @@ export function AdminReportTable({ rows, activities }: { rows: ReportRow[]; acti
           <span aria-hidden="true">⌕</span>
           <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search program name…" aria-label="Search program name" />
         </label>
-        <span className="muted small-text">Showing {visibleRows.length} of {rows.length} calendars</span>
+        <span className="muted small-text" aria-live="polite">Showing {visibleRows.length} of {rows.length} calendars</span>
       </div>
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
-              {sortableHeaders.map((header) => (
-                <th key={header.column}>
+              {sortableHeaders.map((header) => {
+                const active = sortKey === header.column
+                return <th key={header.column} scope="col" aria-sort={active ? (ascending ? 'ascending' : 'descending') : 'none'}>
                   <SortButton column={header.column} label={header.label} sortKey={sortKey} ascending={ascending} onSort={sort} />
                 </th>
-              ))}
-              {activities.map((activity) => <th key={activity.id}>{activity.name}</th>)}
+              })}
+              {activities.map((activity) => <th scope="col" key={activity.id}>{activity.name}</th>)}
             </tr>
           </thead>
           <tbody>
