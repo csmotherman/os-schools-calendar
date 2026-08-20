@@ -1,0 +1,4 @@
+project_id = "os-schools-calendar"
+
+[db.seed]
+enabled = false
