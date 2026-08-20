@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, test/local-supabase-security]
   pull_request:
 
 jobs:
