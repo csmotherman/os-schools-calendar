@@ -17,6 +17,7 @@
   --app-shadow:0 1px 2px rgb(16 24 40 / 4%),0 6px 18px rgb(16 24 40 / 5%);
 }
 body{background:var(--app-bg);color:var(--app-text);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:-.005em}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgb(31 78 121 / 18%);outline-offset:2px}
 .page-shell{padding:36px 24px 48px}.content-shell,.card-wide{width:min(100%,1240px)}
 .card{border-color:var(--app-border);border-radius:var(--app-radius);box-shadow:var(--app-shadow)}
 .button{border-radius:8px;background:var(--app-primary);font-weight:700;box-shadow:none}.button:hover{background:var(--app-primary-hover)}
@@ -35,5 +36,6 @@ body{background:var(--app-bg);color:var(--app-text);font-family:Inter,ui-sans-se
 .dashboard-grid-two{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.75fr);gap:18px}.quick-links{display:grid;gap:10px}.quick-link{border:1px solid var(--app-border);border-radius:10px;padding:14px 15px;background:#fff;color:inherit;text-decoration:none}.quick-link:hover{border-color:#b7c7d8;background:#fbfcfd;text-decoration:none}.quick-link strong{display:block;font-size:14px}.quick-link span{display:block;margin-top:4px;color:var(--app-muted);font-size:12px;line-height:1.45}
 .status-summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.status-summary .status-pill{font-size:12px;padding:6px 10px}
 .table-wrap{border-color:var(--app-border);border-radius:10px}th{background:#f8fafc;color:#475467;font-size:12px}th,td{padding:13px 14px}
+.calendar-browser{border-color:var(--app-border);box-shadow:var(--app-shadow)}.calendar-toolbar,.weekday-header{background:#f8fafc}.calendar-toolbar-summary span,.calendar-legend,.weekday-header{font-size:11px}.calendar-toolbar-summary span{padding:6px 9px}.calendar-program-name,.side-eyebrow,.drawer-eyebrow,.calendar-current-eyebrow{font-size:11px;letter-spacing:.06em}.day-marker{font-size:10px}.activity-chip{font-size:10px}.calendar-day-number{font-size:13px}.requirement-compact-row strong,.activity-total-list dd{font-size:12px}.requirement-compact-row div span,.activity-total-list dt{font-size:11px}
 @media(max-width:960px){.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-grid-two{grid-template-columns:1fr}}
 @media(max-width:640px){.page-shell{padding:24px 14px 36px}.dashboard-header{display:grid}.dashboard-header h1{font-size:27px}.dashboard-section{padding:17px}.metric-grid{grid-template-columns:1fr 1fr}.metric-value{font-size:26px}.action-item{grid-template-columns:1fr}}
