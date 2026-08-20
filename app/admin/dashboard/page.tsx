@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getAccessState } from '@/lib/auth/access'
 import { createClient } from '@/lib/supabase/server'
-import { logout } from '@/app/(auth)/actions'
 
 export default async function AdminDashboardPage() {
   const { user, profile } = await getAccessState()
@@ -33,7 +32,6 @@ export default async function AdminDashboardPage() {
             <h1>Administrative overview</h1>
             <p className="dashboard-subtitle">Review incoming work, manage program access, and monitor calendar completion across participating programs.</p>
           </div>
-          <form action={logout}><button className="button button-secondary" type="submit">Sign out</button></form>
         </header>
 
         {loadErrors.length > 0 ? <div className="alert alert-error">Some dashboard data could not be loaded. Check the server log for the database error.</div> : null}
