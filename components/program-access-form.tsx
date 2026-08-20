@@ -17,7 +17,7 @@ export function ProgramAccessForm({ programs }: { programs: ProgramOption[] }) {
     <form action={requestProgram} className="stack">
       <div className="field">
         <label htmlFor="program-search">Find your program</label>
-        <input id="program-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Start typing a program or district name" autoComplete="off" />
+        <input id="program-search" type="search" value={query} onChange={(event) => { setQuery(event.target.value); setSelectedProgramId('') }} placeholder="Start typing a program or district name" autoComplete="off" />
         <span className="muted small-text" aria-live="polite">{filtered.length} of {programs.length} programs shown</span>
       </div>
 
