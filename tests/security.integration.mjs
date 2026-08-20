@@ -213,11 +213,11 @@ test('pending users cannot see program calendar data', async () => {
   assert.deepEqual(data, [])
 })
 
-test('program users cannot read the audit log', async () => {
+test('program users cannot see audit-log rows', async () => {
   const client = await signIn(fixture.userAEmail)
   const { data, error } = await client.from('audit_log').select('id')
-  assert.ok(error, 'Expected audit_log read to be denied for a program user')
-  assert.equal(data, null)
+  assert.ifError(error)
+  assert.deepEqual(data, [])
 })
 
 test('admins can see calendars across programs', async () => {
