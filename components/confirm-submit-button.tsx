@@ -1,9 +1,9 @@
 'use client'
 
-import type { MouseEvent } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
 
 type ConfirmSubmitButtonProps = {
-  children: React.ReactNode
+  children: ReactNode
   message: string
   className?: string
   disabled?: boolean
