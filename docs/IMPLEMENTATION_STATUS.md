@@ -14,10 +14,10 @@
 - pending-calendar edit lock
 - approved-edit re-review behavior
 - admin programs/users/approvals/calendars/settings/reporting/audit screens
-- controlled admin calendar deletion
+- controlled admin calendar deletion with deletion-safe audit capture
 - CSV reporting export
 - official program directory migration
-- migrations through `020`
+- migrations through `021`
 - calendar-engine unit tests
 - pgTAP RLS/security/workflow integration tests
 - migration continuity verification
