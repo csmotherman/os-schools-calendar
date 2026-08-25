@@ -32,13 +32,13 @@ supabase db lint --local --level error --fail-on error
 supabase stop --no-backup
 ```
 
-The pgTAP suite creates isolated test users/programs inside a transaction and proves critical RLS/workflow behavior through direct database calls. Test data is rolled back.
+The pgTAP suite creates isolated test users/programs inside transactions and proves critical RLS/workflow behavior through direct database calls. Test data is rolled back.
 
 ## 2. What the database tests must prove
 
 The automated database suite is expected to fail the build if any of these guarantees regress:
 
-- all repository migrations apply to a fresh database through migration `021`;
+- all repository migrations apply to a fresh database through migration `022`;
 - RLS remains enabled on program/calendar/audit tables;
 - a program user cannot create raw calendar rows instead of the controlled RPC;
 - a program user cannot directly delete calendar-day rows;
@@ -49,6 +49,7 @@ The automated database suite is expected to fail the build if any of these guara
 - pending calendars cannot be edited by program users;
 - program users cannot approve calendars;
 - admins can review across programs;
+- admin disable/restore returns users to the correct typed account state;
 - approved-calendar edits reopen review;
 - calendar changes remain visible in the audit log;
 - controlled admin calendar deletion works without breaking audit capture.
@@ -80,7 +81,7 @@ supabase db push --linked --dry-run
 supabase db lint --linked --level error --fail-on error
 ```
 
-Review the migration list. The hosted project must contain the same migration history as the repository through `021`, with no unexplained dashboard-only schema changes.
+Review the migration list. The hosted project must contain the same migration history as the repository through `022`, with no unexplained dashboard-only schema changes.
 
 After review, apply pending migrations to staging:
 
@@ -102,7 +103,7 @@ Before onboarding real users:
 - configure an approved custom SMTP provider for confirmation and password-reset mail;
 - review Supabase Auth rate limits and password policy;
 - confirm the first admin account was deliberately bootstrapped and that public registration cannot select the ADMIN role;
-- test sign-up, confirmation, login, logout, password reset, session restoration, decline/resubmit, approval, and disabled-account behavior on staging.
+- test sign-up, confirmation, login, logout, password reset, session restoration, decline/resubmit, approval, disable, and restore behavior on staging.
 
 ## 6. Vercel / application environment
 
@@ -193,7 +194,7 @@ Production is **NO-GO** unless all of the following are true:
 - [ ] fresh local `supabase db reset` succeeds;
 - [ ] pgTAP RLS/workflow suite passes;
 - [ ] PostgreSQL lint has no errors;
-- [ ] hosted staging migration history matches repository through `021`;
+- [ ] hosted staging migration history matches repository through `022`;
 - [ ] staging auth workflows pass;
 - [ ] staging cross-program isolation was manually spot-checked with controlled accounts;
 - [ ] canonical production URL and auth redirects are configured;
