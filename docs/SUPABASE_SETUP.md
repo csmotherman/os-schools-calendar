@@ -1,44 +1,32 @@
 # Supabase Setup
 
-The Supabase project is created and the initial `001`-`004` migrations plus reference seed were applied during the foundation setup.
-
-## Supabase responsibilities
-
-- PostgreSQL database
-- email/password Auth
-- persistent sessions used by the Next.js application
-- Row Level Security
-- database functions/triggers
-- atomic application RPCs
-- schema migrations
-- reference data
+Supabase provides PostgreSQL, Auth, persistent sessions, Row Level Security, database functions/triggers, and the application's controlled RPC layer.
 
 ## Repository locations
 
-- `lib/supabase/client.ts` — typed browser client
-- `lib/supabase/server.ts` — typed cookie-aware server client
+- `supabase/config.toml` — committed local Supabase configuration
+- `supabase/migrations/` — canonical versioned schema changes
+- `supabase/seed/reference_data.sql` — stable local/reference seed values
+- `supabase/tests/database/` — pgTAP security/workflow integration tests
+- `lib/supabase/client.ts` — browser client
+- `lib/supabase/server.ts` — cookie-aware server client
 - `lib/supabase/proxy.ts` — session refresh/cookie propagation
-- `proxy.ts` — Next.js 16 request proxy
+- `proxy.ts` — Next.js request proxy
 - `types/database.ts` — application database/RPC types
-- `supabase/migrations/` — versioned executable database migrations
-- `supabase/seed/` — reference/test data
-- `supabase/policies/` — policy documentation/support files; canonical executable RLS remains in migrations
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local` and populate values from the Supabase project Connect dialog.
-
-Required:
+Copy `.env.example` to `.env.local` and populate:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `NEXT_PUBLIC_SITE_URL`
 
-The application intentionally does not require a service-role key. Privileged operations are implemented as narrowly-scoped PostgreSQL functions that verify the authenticated user/admin before mutating data.
+The application intentionally does not require a service-role key. Do not place privileged keys or database passwords in a `NEXT_PUBLIC_*` variable.
 
-## Current migration sequence
+## Canonical migration sequence
 
-Fresh database:
+The current repository contains migrations `001` through `020`:
 
 1. `001_initial_schema.sql`
 2. `002_database_functions.sql`
@@ -51,14 +39,69 @@ Fresh database:
 9. `009_account_self_service.sql`
 10. `010_final_security_refinements.sql`
 11. `011_atomic_generation_enforcement.sql`
-12. `seed/reference_data.sql`
+12. `012_official_program_directory.sql`
+13. `013_program_directory_api.sql`
+14. `014_program_request_api.sql`
+15. `015_access_state_api.sql`
+16. `016_explicit_authenticated_table_privileges.sql`
+17. `017_fix_program_request_role_comparison.sql`
+18. `018_fix_program_request_current_role_collision.sql`
+19. `019_calendar_workflow_transaction_hardening.sql`
+20. `020_admin_calendar_deletion.sql`
 
-For the existing project where `001`-`004` and reference data were already applied, run only `005` through `011` now. The existing seed data does not need to be rerun.
+Run `npm run migrations:verify` to reject duplicate or missing numbered migration files.
 
-## Security behavior added after the initial schema
+## Fresh local database
 
-The hardening migrations add blocked-date/year validation, controlled admin access approval, calendar workflow RPCs, pending-calendar immutability, database-enforced blocking requirements, safe account self-service, additional audit coverage, and atomic calendar generation. Program users cannot create raw calendar records or manipulate approval fields directly.
+Install Docker and Supabase CLI, then run:
+
+```bash
+supabase start
+supabase db reset
+supabase test db --local
+supabase db lint --local --level error --fail-on error
+```
+
+`supabase db reset` must be able to rebuild the database entirely from repository migrations and configured seed files. If it cannot, production deployment is blocked.
+
+## Existing hosted project
+
+Do not manually decide that only a subset of migrations "probably" needs to run. Compare the hosted migration history to Git:
+
+```bash
+supabase login
+supabase link --project-ref <PROJECT_REF>
+supabase migration list --linked
+supabase db push --linked --dry-run
+```
+
+Review the output before applying anything. After approval:
+
+```bash
+supabase db push --linked
+```
+
+Never run `supabase db reset --linked` against production.
+
+## Database security verification
+
+The pgTAP test suite directly simulates authenticated users and verifies:
+
+- cross-program RLS isolation;
+- pending-account isolation;
+- controlled calendar creation;
+- blocked-date enforcement;
+- blocking-requirement enforcement;
+- pending-calendar immutability;
+- denial of program-user approval;
+- admin cross-program review;
+- audit history;
+- controlled deletion.
+
+These tests are intentionally database-level so UI behavior cannot hide a broken policy or RPC.
 
 ## Migration discipline
 
-Applied migration files are historical records. Do not change live Supabase manually to work around an application error. Add/fix the next migration in GitHub, then apply it deliberately to Supabase so repository history remains the source of truth.
+Applied migrations are historical records. Do not patch the hosted schema with one-off SQL that is absent from the repository. Add the next migration, validate it against a fresh local database, run pgTAP/lint, and then apply it through the controlled deployment process.
+
+See `PRODUCTION_READINESS.md` for the complete release gate.
