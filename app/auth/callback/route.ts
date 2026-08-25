@@ -2,11 +2,19 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const requestUrl = new URL(request.url)
+  const { searchParams } = requestUrl
+  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+  const origin = configuredOrigin ?? (process.env.NODE_ENV === 'production' ? null : requestUrl.origin)
+
+  if (!origin) {
+    return new Response('Application URL is not configured.', { status: 500 })
+  }
+
   const code = searchParams.get('code')
   let next = searchParams.get('next') ?? '/dashboard'
 
-  if (!next.startsWith('/')) {
+  if (!next.startsWith('/') || next.startsWith('//')) {
     next = '/dashboard'
   }
 

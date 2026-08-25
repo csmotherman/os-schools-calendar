@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "rm -rf .test-dist && tsc -p tsconfig.test.json && node --test .test-dist/tests/calendar.test.js",
-    "check": "npm run typecheck && npm run lint && npm test && npm run build"
+    "migrations:verify": "node scripts/verify-migrations.mjs",
+    "check": "npm run migrations:verify && npm run typecheck && npm run lint && npm test && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

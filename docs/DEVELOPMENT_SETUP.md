@@ -1,55 +1,85 @@
-# Development / Implementation Status
+# Development / Validation Setup
 
 ## Implemented
 
-- Supabase schema v1, helper functions/triggers, RLS, Auth profile trigger, and reference seed data
-- security/workflow hardening migrations through `011`
+- Supabase schema, helper functions/triggers, RLS, Auth profile trigger, and reference data
+- migrations through `022`
 - typed Next.js/Supabase application foundation
 - persistent email/password authentication and recovery
 - pending program-access registration and admin approval/decline
 - declined-request resubmission and profile self-service
 - program/admin dashboards
-- program directory administration
-- atomic calendar generation
-- month calendar UI with right-side date editor
+- official program directory administration
+- atomic calendar generation and range updates
+- month calendar UI with day editing and bulk editing
 - activities, notes, and session-state editing
 - live counts and requirement evaluation
 - database-enforced blocking requirements at submit/approve
 - pending-calendar immutability for program users
-- admin review, approve, and changes-requested workflow
+- admin review, approval, changes-requested workflow, and controlled deletion with deletion-safe audit capture
+- admin disable/restore behavior with typed account-status restoration
 - re-review after approved-calendar edits
 - school-year, blocked-date, requirement, calendar-type, and activity-type administration
 - cross-program reporting and CSV export
 - audit viewer
-- unit tests for generation/count/requirement logic
-- GitHub Actions verification workflow
+- application unit tests
+- pgTAP database security/workflow tests, including disable/restore regression coverage
+- GitHub Actions application + database verification
 
-## Local development setup
+## Local application setup
 
 1. Install Node.js 20.9+.
-2. Clone/pull the repository and enter the project folder.
-3. Run `npm install`.
+2. Clone/pull the repository.
+3. Run `npm ci`.
 4. Copy `.env.example` to `.env.local`.
-5. Populate `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `NEXT_PUBLIC_SITE_URL=http://localhost:3000`.
+5. Populate the three documented public environment variables.
 6. Run `npm run check`.
 7. Run `npm run dev`.
 
-## Existing Supabase project upgrade
+## Local database validation
 
-If `001`-`004` and `reference_data.sql` were already applied, run only `005` through `011` in numeric order. Do not edit the live schema manually to work around a migration error; fix the repository migration first.
+Install a Docker-compatible runtime and Supabase CLI. The repository already contains `supabase/config.toml`.
 
-## Current validation priority
+```bash
+supabase start
+supabase db reset
+supabase test db --local
+supabase db lint --local --level error --fail-on error
+supabase stop --no-backup
+```
 
-Before importing the official program list, complete the end-to-end test plan in `TEST_PLAN.md` with Test Program A/B and controlled test accounts. The critical acceptance gates are:
+A clean reset is mandatory before treating a migration set as releasable.
+
+## Hosted project upgrade
+
+Do not use old instructions that stop at migration `011`. The repository currently contains migrations through `022`.
+
+For any hosted staging/production project:
+
+```bash
+supabase link --project-ref <PROJECT_REF>
+supabase migration list --linked
+supabase db push --linked --dry-run
+```
+
+Only apply migrations after reviewing the hosted-vs-repository history.
+
+## Critical acceptance gates
+
+Automated and manual validation must prove:
 
 - cross-program RLS isolation;
-- program user cannot manipulate approval state;
+- pending accounts receive no calendar access;
+- program users cannot manipulate approval state;
 - pending calendars cannot be edited by program users;
 - blocked dates/activity compatibility cannot be bypassed;
-- blocking requirements prevent submission/approval through direct RPC as well as UI;
+- blocking requirements prevent direct RPC submission/approval;
+- admin disable/restore returns accounts to the correct state;
 - approved edits reopen review;
-- reporting totals match source calendar rows.
+- audit history is preserved, including controlled calendar deletion;
+- reporting totals match source calendar rows;
+- auth confirmation/reset/session flows work on the deployed staging origin.
 
-## Next product polish after validation
+## Production
 
-Once the foundation passes those tests, remaining work is refinement rather than missing core architecture: official program/reference-data import, UX/accessibility review, richer admin filters, optional Excel-format export, deployment/domain configuration, operational documentation, and Oakland Schools IT/security review for production use.
+Passing code and database tests makes the application technically releasable; it does not replace Oakland Schools organizational approval. Production also requires the operational, backup/recovery, accessibility, SMTP/auth, domain, and IT/security gates in `PRODUCTION_READINESS.md`.

@@ -13,8 +13,15 @@ function raw(value: FormDataEntryValue | null) {
 }
 
 async function getOrigin() {
+  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+  if (configuredOrigin) return configuredOrigin
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('NEXT_PUBLIC_SITE_URL must be configured in production.')
+  }
+
   const headerStore = await headers()
-  return process.env.NEXT_PUBLIC_SITE_URL ?? headerStore.get('origin') ?? 'http://localhost:3000'
+  return headerStore.get('origin') ?? 'http://localhost:3000'
 }
 
 function withError(path: string, message: string) {
@@ -63,17 +70,6 @@ export async function requestProgram(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
   if (!programId) redirect(withError('/select-program', 'Select a program.'))
-
-  // Temporary diagnostic: prove which Auth user and profile the server action sees
-  // immediately before invoking request_program_access(). Do not log tokens/cookies.
-  const { data: accessState, error: accessStateError } = await supabase.rpc('get_my_access_state')
-  console.info('Program request identity diagnostic:', {
-    authUserId: user.id,
-    authEmail: user.email ?? null,
-    accessState,
-    accessStateError,
-    selectedProgramId: programId,
-  })
 
   const { data: existing } = await supabase.from('program_memberships').select('id, status').eq('user_id', user.id).limit(1)
   if (existing && existing.length > 0) redirect('/pending')
