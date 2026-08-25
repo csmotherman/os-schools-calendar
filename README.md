@@ -25,6 +25,7 @@ Implemented:
 - approved-calendar edits automatically reopening review
 - pending calendars frozen from program-user edits
 - admin calendar review and controlled deletion
+- deletion audit history that preserves the deleted calendar ID without an invalid foreign-key reference
 - school-year, blocked-date, requirement, calendar-type, and activity-type settings
 - cross-program reporting with CSV export
 - audit-log viewer
@@ -34,7 +35,7 @@ Implemented:
 
 ## Database migrations
 
-`supabase/migrations/` is the schema source of truth. The current sequence is `001` through `020`.
+`supabase/migrations/` is the schema source of truth. The current sequence is `001` through `021`.
 
 Do not manually recreate the schema from selected SQL snippets. For a clean local database, let the Supabase CLI apply the full migration history in order.
 
