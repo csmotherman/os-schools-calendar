@@ -25,7 +25,7 @@ supabase stop --no-backup
 
 The pgTAP suite in `supabase/tests/database/` directly verifies the critical database security/workflow layer, including:
 
-- migrations apply through `021`;
+- migrations apply through `022`;
 - RLS remains enabled;
 - program users cannot bypass controlled calendar creation;
 - program users cannot directly delete calendar-day rows;
@@ -36,6 +36,7 @@ The pgTAP suite in `supabase/tests/database/` directly verifies the critical dat
 - pending calendars are immutable to program users;
 - program users cannot approve calendars;
 - admins can review across programs;
+- admin disable/restore returns users with approved memberships to `APPROVED` and users without one to `PENDING`;
 - approved edits reopen review;
 - audit history is visible to admins;
 - controlled admin deletion works without violating audit foreign keys.
@@ -53,7 +54,7 @@ supabase db push --linked --dry-run
 supabase db lint --linked --level error --fail-on error
 ```
 
-The hosted migration history must match the repository through `021` after approved migrations are applied.
+The hosted migration history must match the repository through `022` after approved migrations are applied.
 
 ## 4. Registration and access approval — staging
 
@@ -91,7 +92,9 @@ Test:
 - password-reset email;
 - reset callback;
 - successful login with the new password;
-- disabled-account behavior.
+- disabled-account behavior;
+- restore an approved-member account and verify normal access returns;
+- restore an account without an approved membership and verify it returns to pending rather than gaining access.
 
 Also verify production/staging callback URLs do not redirect to localhost or an obsolete preview origin.
 
