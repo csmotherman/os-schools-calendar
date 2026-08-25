@@ -13,7 +13,7 @@ Implemented:
 - self-registration with pending program-access approval
 - declined-request resubmission and safe profile-name updates
 - program-level Row Level Security
-- admin user-access approval/decline/disable workflow
+- admin user-access approval/decline/disable/restore workflow
 - official program directory administration
 - calendar generation from school year, calendar type, date range, and normal weekdays
 - automatic blocked-date handling during generation
@@ -30,12 +30,12 @@ Implemented:
 - cross-program reporting with CSV export
 - audit-log viewer
 - calendar-engine unit tests
-- pgTAP RLS/security/workflow integration tests
+- pgTAP RLS/security/workflow integration tests, including admin disable/restore regression coverage
 - GitHub Actions application + database verification
 
 ## Database migrations
 
-`supabase/migrations/` is the schema source of truth. The current sequence is `001` through `021`.
+`supabase/migrations/` is the schema source of truth. The current sequence is `001` through `022`.
 
 Do not manually recreate the schema from selected SQL snippets. For a clean local database, let the Supabase CLI apply the full migration history in order.
 
@@ -125,7 +125,7 @@ Approved calendars remain editable, but a saved calendar change returns the cale
 
 Supabase RLS, PostgreSQL constraints, triggers, and narrowly scoped `SECURITY DEFINER` functions are the authoritative security/integrity layer. UI redirects and hidden controls are not security boundaries.
 
-The pgTAP suite directly tests cross-program isolation, pending-user access, blocked-date enforcement, requirement enforcement, pending-calendar immutability, self-approval denial, admin approval, audit history, and controlled deletion.
+The pgTAP suite directly tests cross-program isolation, pending-user access, blocked-date enforcement, requirement enforcement, pending-calendar immutability, self-approval denial, admin approval, disable/restore behavior, audit history, and controlled deletion.
 
 Never commit credentials. `.env.local` is ignored by Git. Keep privileged credentials out of all `NEXT_PUBLIC_*` variables.
 
