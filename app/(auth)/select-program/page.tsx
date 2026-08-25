@@ -9,10 +9,14 @@ export default async function SelectProgramPage({
   searchParams: Promise<{ error?: string }>
 }) {
   const { error } = await searchParams
-  const { user, memberships } = await getAccessState()
+  const { user, profile, memberships } = await getAccessState()
 
   if (!user) {
     redirect('/login')
+  }
+
+  if (profile?.role === 'ADMIN' && profile.account_status === 'APPROVED') {
+    redirect('/admin/dashboard')
   }
 
   if (memberships.length > 0) {

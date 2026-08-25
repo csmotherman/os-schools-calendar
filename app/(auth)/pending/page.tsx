@@ -11,6 +11,7 @@ export default async function PendingPage({
   const { user, profile, memberships, approvedMembership } = await getAccessState()
 
   if (!user) redirect('/login')
+  if (profile?.role === 'ADMIN' && profile.account_status === 'APPROVED') redirect('/admin/dashboard')
   if (profile?.account_status === 'APPROVED' && approvedMembership) redirect('/dashboard')
   if (memberships.length === 0) redirect('/select-program')
 
