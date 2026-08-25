@@ -13,8 +13,15 @@ function raw(value: FormDataEntryValue | null) {
 }
 
 async function getOrigin() {
+  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+  if (configuredOrigin) return configuredOrigin
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('NEXT_PUBLIC_SITE_URL must be configured in production.')
+  }
+
   const headerStore = await headers()
-  return process.env.NEXT_PUBLIC_SITE_URL ?? headerStore.get('origin') ?? 'http://localhost:3000'
+  return headerStore.get('origin') ?? 'http://localhost:3000'
 }
 
 function withError(path: string, message: string) {
