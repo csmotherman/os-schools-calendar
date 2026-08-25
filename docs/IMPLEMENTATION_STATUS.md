@@ -15,11 +15,12 @@
 - approved-edit re-review behavior
 - admin programs/users/approvals/calendars/settings/reporting/audit screens
 - controlled admin calendar deletion with deletion-safe audit capture
+- admin disable/restore workflow with typed account-status restoration
 - CSV reporting export
 - official program directory migration
-- migrations through `021`
+- migrations through `022`
 - calendar-engine unit tests
-- pgTAP RLS/security/workflow integration tests
+- pgTAP RLS/security/workflow integration tests, including disable/restore regression coverage
 - migration continuity verification
 - GitHub Actions application + database verification
 - baseline production HTTP security headers
