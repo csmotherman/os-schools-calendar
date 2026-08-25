@@ -38,7 +38,7 @@ The pgTAP suite creates isolated test users/programs inside a transaction and pr
 
 The automated database suite is expected to fail the build if any of these guarantees regress:
 
-- all repository migrations apply to a fresh database through migration `020`;
+- all repository migrations apply to a fresh database through migration `021`;
 - RLS remains enabled on program/calendar/audit tables;
 - a program user cannot create raw calendar rows instead of the controlled RPC;
 - a program user cannot directly delete calendar-day rows;
@@ -51,7 +51,7 @@ The automated database suite is expected to fail the build if any of these guara
 - admins can review across programs;
 - approved-calendar edits reopen review;
 - calendar changes remain visible in the audit log;
-- controlled admin calendar deletion works.
+- controlled admin calendar deletion works without breaking audit capture.
 
 ## 3. Reproduce the database from zero
 
@@ -80,7 +80,7 @@ supabase db push --linked --dry-run
 supabase db lint --linked --level error --fail-on error
 ```
 
-Review the migration list. The hosted project must contain the same migration history as the repository through `020`, with no unexplained dashboard-only schema changes.
+Review the migration list. The hosted project must contain the same migration history as the repository through `021`, with no unexplained dashboard-only schema changes.
 
 After review, apply pending migrations to staging:
 
@@ -193,7 +193,7 @@ Production is **NO-GO** unless all of the following are true:
 - [ ] fresh local `supabase db reset` succeeds;
 - [ ] pgTAP RLS/workflow suite passes;
 - [ ] PostgreSQL lint has no errors;
-- [ ] hosted staging migration history matches repository through `020`;
+- [ ] hosted staging migration history matches repository through `021`;
 - [ ] staging auth workflows pass;
 - [ ] staging cross-program isolation was manually spot-checked with controlled accounts;
 - [ ] canonical production URL and auth redirects are configured;
