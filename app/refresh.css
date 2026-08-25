@@ -1,3 +1,4 @@
+.delete-confirmation{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}.delete-confirmation-text{font-size:12px;font-weight:700;color:var(--danger)}
 /* Final shared shell alignment for the refreshed visual system. */
 .program-topbar,.admin-topbar{background:rgba(255,253,248,.88);border-bottom-color:#d8e0da;box-shadow:0 7px 28px rgb(32 52 47 / 8%)}
 .program-topbar:before,.admin-topbar:before{height:4px;background:linear-gradient(90deg,#176b5b 0 46%,#4d9b75 46% 72%,#d28a3c 72% 86%,#c66055 86% 100%)}

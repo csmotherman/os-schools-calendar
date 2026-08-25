@@ -3,15 +3,17 @@ import { redirect } from 'next/navigation'
 import { getAccessState } from '@/lib/auth/access'
 import { createClient } from '@/lib/supabase/server'
 import type { CalendarStatus } from '@/types/database'
+import { DeleteCalendarButton } from '@/components/delete-calendar-button'
+import { deleteCalendar } from '../actions'
 
 const statuses: CalendarStatus[] = ['DRAFT', 'PENDING', 'APPROVED', 'CHANGES_REQUESTED']
 
 export default async function AdminCalendarsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>
+  searchParams: Promise<{ status?: string; error?: string; success?: string }>
 }) {
-  const { status } = await searchParams
+  const { status, error, success } = await searchParams
   const { user, profile } = await getAccessState()
   if (!user) redirect('/login')
   if (profile?.role !== 'ADMIN' || profile.account_status !== 'APPROVED') redirect('/dashboard')
@@ -60,9 +62,12 @@ export default async function AdminCalendarsPage({
           {status ? <Link href="/admin/calendars">Clear</Link> : null}
         </form>
 
+  {error ? <div className="alert alert-error">{error}</div> : null}
+  {success ? <div className="alert alert-success">{success}</div> : null}
+
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Program</th><th>School year</th><th>Type</th><th>Dates</th><th>Status</th><th /></tr></thead>
+            <thead><tr><th>Program</th><th>School year</th><th>Type</th><th>Dates</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
               {calendars.map((calendar) => (
                 <tr key={calendar.id}>
@@ -71,7 +76,7 @@ export default async function AdminCalendarsPage({
                   <td>{typeMap.get(calendar.calendar_type_id) ?? '—'}</td>
                   <td>{calendar.start_date} – {calendar.end_date}</td>
                   <td><span className={`status-pill status-${calendar.status.toLowerCase()}`}>{calendar.status.replaceAll('_', ' ')}</span></td>
-                  <td><Link href={`/admin/calendars/${calendar.id}`}>Open</Link></td>
+                  <td><div className="actions-row"><Link href={`/admin/calendars/${calendar.id}`}>Open</Link><form action={deleteCalendar}><input type="hidden" name="calendar_id" value={calendar.id} /><input type="hidden" name="return_path" value="/admin/calendars" /><DeleteCalendarButton calendarName={typeMap.get(calendar.calendar_type_id) ?? 'this calendar'} /></form></div></td>
                 </tr>
               ))}
               {calendars.length === 0 ? <tr><td colSpan={6} className="muted">No calendars match this filter.</td></tr> : null}

@@ -4,7 +4,8 @@ import { CalendarDayGrid } from '@/components/calendar-day-grid'
 import { getAccessState } from '@/lib/auth/access'
 import { evaluateRequirements, hasBlockingFailures, summarizeCalendarDays } from '@/lib/calendar/summary'
 import { createClient } from '@/lib/supabase/server'
-import { approveCalendar, requestCalendarChanges } from '../../actions'
+import { approveCalendar, deleteCalendar, requestCalendarChanges } from '../../actions'
+import { DeleteCalendarButton } from '@/components/delete-calendar-button'
 
 export default async function AdminCalendarPage({
   params,
@@ -71,6 +72,7 @@ export default async function AdminCalendarPage({
               <span className="status-pill">View only</span>
               <span className={`status-pill status-${calendar.status.toLowerCase()}`}>{calendar.status.replaceAll('_', ' ')}</span>
               <Link className="button button-secondary" href="/admin/calendars">Back to calendars</Link>
+              <form action={deleteCalendar}><input type="hidden" name="calendar_id" value={calendar.id} /><input type="hidden" name="return_path" value="/admin/calendars" /><DeleteCalendarButton calendarName={typeResult.data?.name ?? 'this calendar'} /></form>
             </div>
           </div>
 

@@ -101,3 +101,19 @@ export async function requestCalendarChanges(formData: FormData) {
   revalidatePath('/admin')
   redirect(withMessage('/admin/approvals', 'success', 'Changes requested.'))
 }
+
+export async function deleteCalendar(formData: FormData) {
+  await requireAdmin()
+  const calendarId = value(formData, 'calendar_id')
+  const returnPath = value(formData, 'return_path') || '/admin/calendars'
+  if (!calendarId) redirect(withMessage(returnPath, 'error', 'Missing calendar.'))
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('delete_calendar', {
+    target_calendar_id: calendarId,
+  })
+  if (error) redirect(withMessage(returnPath, 'error', error.message))
+
+  revalidatePath('/admin')
+  redirect(withMessage('/admin/calendars', 'success', 'Calendar deleted.'))
+}
