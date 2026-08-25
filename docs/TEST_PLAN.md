@@ -25,7 +25,7 @@ supabase stop --no-backup
 
 The pgTAP suite in `supabase/tests/database/` directly verifies the critical database security/workflow layer, including:
 
-- migrations apply through `020`;
+- migrations apply through `021`;
 - RLS remains enabled;
 - program users cannot bypass controlled calendar creation;
 - program users cannot directly delete calendar-day rows;
@@ -38,7 +38,7 @@ The pgTAP suite in `supabase/tests/database/` directly verifies the critical dat
 - admins can review across programs;
 - approved edits reopen review;
 - audit history is visible to admins;
-- controlled admin deletion works.
+- controlled admin deletion works without violating audit foreign keys.
 
 These tests roll back their fixture data.
 
@@ -53,7 +53,7 @@ supabase db push --linked --dry-run
 supabase db lint --linked --level error --fail-on error
 ```
 
-The hosted migration history must match the repository through `020` after approved migrations are applied.
+The hosted migration history must match the repository through `021` after approved migrations are applied.
 
 ## 4. Registration and access approval — staging
 
@@ -146,7 +146,7 @@ Verify admins can create/deactivate programs, school years, blocked dates, requi
 
 Open `/admin/reports`, compare counts to known source calendars, and download CSV. Verify totals are derived from relational day/activity data and match the source calendars.
 
-Test controlled admin calendar deletion with test-only data and verify the deletion appears in audit/history behavior as designed.
+Test controlled admin calendar deletion with test-only data. Verify the calendar is removed and the DELETE audit row preserves the deleted calendar UUID as `entity_id` without retaining an invalid `calendar_id` foreign-key reference.
 
 ## 12. Accessibility / usability acceptance
 
