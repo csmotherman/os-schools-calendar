@@ -26,7 +26,7 @@ The application intentionally does not require a service-role key. Do not place 
 
 ## Canonical migration sequence
 
-The current repository contains migrations `001` through `020`:
+The current repository contains migrations `001` through `021`:
 
 1. `001_initial_schema.sql`
 2. `002_database_functions.sql`
@@ -48,6 +48,9 @@ The current repository contains migrations `001` through `020`:
 18. `018_fix_program_request_current_role_collision.sql`
 19. `019_calendar_workflow_transaction_hardening.sql`
 20. `020_admin_calendar_deletion.sql`
+21. `021_fix_calendar_deletion_audit.sql`
+
+Migration `021` preserves the deleted calendar UUID in `audit_log.entity_id` while leaving `audit_log.calendar_id` null for that DELETE event, preventing the audit trigger from referencing a parent calendar row that no longer exists.
 
 Run `npm run migrations:verify` to reject duplicate or missing numbered migration files.
 
