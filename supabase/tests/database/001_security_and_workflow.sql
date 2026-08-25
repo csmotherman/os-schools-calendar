@@ -96,8 +96,8 @@ grant select on test_ids to authenticated;
 -- 1-6: migration/RLS baseline.
 select is(
   (select max(version) from supabase_migrations.schema_migrations),
-  '020',
-  'fresh database applies migrations through 020'
+  '021',
+  'fresh database applies migrations through 021'
 );
 select is((select relrowsecurity from pg_class where oid = 'public.calendars'::regclass), true, 'calendars has RLS enabled');
 select is((select relrowsecurity from pg_class where oid = 'public.calendar_days'::regclass), true, 'calendar_days has RLS enabled');
